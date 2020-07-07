@@ -30,3 +30,7 @@ type Tx struct {
 	Out []Output `json:"out"`
 }
 ```
+
+## ToDo
+
+- FromRawTx
