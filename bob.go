@@ -1,5 +1,10 @@
 package bob
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 // E has address and value information
 type E struct {
 	A string `json:"a,omitempty" bson:"a,omitempty"`
@@ -62,4 +67,18 @@ type Tx struct {
 // New creates a new bob tx
 func New() *Tx {
 	return &Tx{}
+}
+
+// FromString takes a BOB formatted string
+func (t *Tx) FromString(line string) {
+	t.FromBytes([]byte(line))
+}
+
+// FromBytes takes a BOB formatted tx string as bytes
+func (t *Tx) FromBytes(line []byte) error {
+	if err := json.Unmarshal(line, &t); err != nil {
+		fmt.Println("Error:", err)
+		return err
+	}
+	return nil
 }
