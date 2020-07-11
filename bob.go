@@ -17,7 +17,9 @@ type E struct {
 type Cell struct {
 	H   string `json:"h,omitempty" bson:"h,omitempty"`
 	B   string `json:"b,omitempty" bson:"b,omitempty"`
+	LB  string `json:"lb,omitempty" bson:"lb,omitempty`
 	S   string `json:"s,omitempty" bson:"s,omitempty"`
+	LS  string `json:"ls,omitempty" bson:"ls,omitempty"`
 	I   uint8  `json:"i" bson:"i"`
 	II  uint8  `json:"ii" bson:"ii"`
 	Op  uint16 `json:"op,omitempty" bson:"op,omitempty"`
@@ -70,8 +72,12 @@ func New() *Tx {
 }
 
 // FromString takes a BOB formatted string
-func (t *Tx) FromString(line string) {
-	t.FromBytes([]byte(line))
+func (t *Tx) FromString(line string) error {
+	err := t.FromBytes([]byte(line))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // FromBytes takes a BOB formatted tx string as bytes
