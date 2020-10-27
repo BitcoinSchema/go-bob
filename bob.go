@@ -94,6 +94,16 @@ func (t *BobTx) FromString(line string) error {
 	return nil
 }
 
+// FromRawTxString takes a hex encoded tx string
+func (t *BobTx) FromRawTxString(rawTxString string) error {
+
+	tx, err := transaction.NewFromString(rawTxString)
+	if err != nil {
+		return err
+	}
+	return t.FromTx(tx)
+}
+
 // FromTx takes a libsv.Transaction
 func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 
@@ -181,6 +191,16 @@ func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 	}
 
 	return nil
+}
+
+// ToString returns a json string of bobTx
+func (t *BobTx) ToString() (string, error) {
+	// Create JSON from the instance data.
+	// ... Ignore errors.
+	b, err := json.Marshal(t)
+	// Convert bytes to string.
+	return string(b), err
+
 }
 
 // ToTx returns a transaction.Transaction
@@ -278,11 +298,7 @@ func (t *BobTx) FromBytes(line []byte) error {
 			for cellIdx, cell := range tape.Cell {
 				if len(cell.H) == 0 && len(cell.B) > 0 {
 					// base 64 decode cell.B and encode it to hex string
-					cellBytes, e := base64.StdEncoding.DecodeString(cell.B)
-					if e != nil {
-						fmt.Println(e)
-					}
-					log.Println("Replacing!", hex.EncodeToString(cellBytes))
+					cellBytes, _ := base64.StdEncoding.DecodeString(cell.B)
 					t.Out[outIdx].Tape[tapeIdx].Cell[cellIdx].H = hex.EncodeToString(cellBytes)
 				}
 			}
@@ -293,11 +309,7 @@ func (t *BobTx) FromBytes(line []byte) error {
 			for cellIdx, cell := range tape.Cell {
 				if len(cell.H) == 0 && len(cell.B) > 0 {
 					// base 64 decode cell.B and encode it to hex string
-					cellBytes, e := base64.StdEncoding.DecodeString(cell.B)
-					if e != nil {
-						fmt.Println(e)
-					}
-					log.Println("Replacing!", hex.EncodeToString(cellBytes))
+					cellBytes, _ := base64.StdEncoding.DecodeString(cell.B)
 					t.In[inIdx].Tape[tapeIdx].Cell[cellIdx].H = hex.EncodeToString(cellBytes)
 				}
 			}

@@ -39,9 +39,6 @@ type Tx struct {
 // BOB from libsv.transaction
 bobData := bob.New()
 err = bobData.FromTx(tx)
-if err != nil {
-  return err
-}
 
 ```
 
@@ -51,9 +48,6 @@ if err != nil {
 // BOB from libsv.transaction
 bobData := bob.New()
 tx, err = bobData.ToTx()
-if err != nil {
-  return err
-}
 
 ```
 
@@ -62,7 +56,7 @@ if err != nil {
 ```go
 // BOB formatted JSON string
 bobData := bob.New()
-tx = bobData.ToString()
+tx, err = bobData.ToString()
 
 ```
 
@@ -72,12 +66,14 @@ tx = bobData.ToString()
 // BOB to raw tx string
 bobData := bob.New()
 tx, err = bobData.ToRawTxString()
-if err != nil {
-  return err
-}
 
 ```
 
-## ToDo
+## BOB from raw tx string
 
-- FromRawTx
+```go
+// BOB from raw tx string
+bobTx := New()
+err := bobTx.FromRawTxString(rawTxString)
+
+```

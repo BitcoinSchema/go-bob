@@ -204,6 +204,45 @@ func TestToRawTxString(t *testing.T) {
 	}
 }
 
+func TestToString(t *testing.T) {
+	rawTxString := "0100000001f15a9d3c550c14e12ca066ad09edff31432f1e9f45894ecff5b70c8354c81f3d010000006b483045022100f012c3bd3781091aa8e53cab2ffcb90acced8c65500b41086fd225e48c98c1d702200b8ff117b8ecd2b2d7e95551bc5a1b3bbcca8049864479a28bed9dc842a86804412103ef5bb22964d529c0af748d9a6381432f05298e7a66ed2fe22e7975b1502528a7ffffffff0200000000000000001f006a15e4b880e781afe883bde999a4e58d83e5b9b4e69a970635386135393733b30100000000001976a9149c63715c6d1fa6c61b31d2911516e1c3db3bdfa888ac00000000"
+
+	bobTx := New()
+	err := bobTx.FromRawTxString(rawTxString)
+	if err != nil {
+		t.Errorf("Error %s", err)
+	}
+
+	// to string
+	txString, err := bobTx.ToString()
+	if err != nil {
+		t.Errorf("Error %s", err)
+	}
+
+	// from string
+	otherBob := New()
+	err = otherBob.FromString(txString)
+	if err != nil {
+		t.Errorf("Error %s", err)
+	}
+
+	// check txid match
+	if bobTx.Tx.H != otherBob.Tx.H {
+		t.Errorf("TXIDS do not match!")
+	}
+}
+
+func TestFromRawTx(t *testing.T) {
+
+	rawTxString := "0100000001f15a9d3c550c14e12ca066ad09edff31432f1e9f45894ecff5b70c8354c81f3d010000006b483045022100f012c3bd3781091aa8e53cab2ffcb90acced8c65500b41086fd225e48c98c1d702200b8ff117b8ecd2b2d7e95551bc5a1b3bbcca8049864479a28bed9dc842a86804412103ef5bb22964d529c0af748d9a6381432f05298e7a66ed2fe22e7975b1502528a7ffffffff0200000000000000001f006a15e4b880e781afe883bde999a4e58d83e5b9b4e69a970635386135393733b30100000000001976a9149c63715c6d1fa6c61b31d2911516e1c3db3bdfa888ac00000000"
+
+	bobTx := New()
+	err := bobTx.FromRawTxString(rawTxString)
+	if err != nil {
+		t.Errorf("Error %s", err)
+	}
+}
+
 func TestFromBadString(t *testing.T) {
 	bobBadStrings := New()
 	err := bobBadStrings.FromString(sampleBobTxBadStrings)
