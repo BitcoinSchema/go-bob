@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/libsv/libsv/script"
@@ -186,18 +187,25 @@ func (t *BobTx) ToTx() (*transaction.Transaction, error) {
 	tx := transaction.New()
 
 	for _, in := range t.In {
+
 		if len(in.Tape) == 0 || len(in.Tape[0].Cell) == 0 {
 			return nil, fmt.Errorf("Failed to process inputs. More tapes or cells than expected. %+v", in.Tape)
 		}
-		builtPrevTxScript := in.Tape[0].Cell[0].H
-		prevTxScript, _ := script.NewFromHexString(builtPrevTxScript)
+
+		unlockingScript, _ := script.NewP2PKHFromAddress(in.E.A)
+		builtPrevTxScript, _ := script.NewFromHexString(in.Tape[0].Cell[0].H)
+
+		log.Println("BuiltPrevTxScript", builtPrevTxScript.ToString())
+		// prevTxScript, _ := script.NewFromHexString(builtPrevTxScript)
 
 		// add inputs
 		i := &input.Input{
 			PreviousTxID:       in.E.H,
 			PreviousTxOutIndex: uint32(in.E.I),
 			PreviousTxSatoshis: uint64(in.E.V),
-			PreviousTxScript:   prevTxScript,
+			PreviousTxScript:   builtPrevTxScript,
+			UnlockingScript:    unlockingScript,
+			SequenceNumber:     in.Seq,
 		}
 		tx.AddInput(i)
 	}
