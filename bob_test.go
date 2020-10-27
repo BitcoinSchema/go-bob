@@ -44,14 +44,24 @@ func TestFromTx(t *testing.T) {
 
 }
 
+func TestToTx(t *testing.T) {
+	bobTx := New()
+	bobTx.FromString(sampleBobTx)
+
+	tx, err := bobTx.ToTx()
+
+	if err != nil && tx.ToString() != "0100000001f15a9d3c550c14e12ca066ad09edff31432f1e9f45894ecff5b70c8354c81f3d0100000000000000000200000000000000000000000000000000000000000000" {
+		t.Errorf("Unexpected tx result %s", tx.ToString())
+	}
+}
+
 func TestToRawTxString(t *testing.T) {
 	bobTx := New()
 	bobTx.FromString(sampleBobTx)
 
-	rawTx := bobTx.ToRawTxString()
-
-	if rawTx != "" {
-		t.Errorf("Failed to convert Bob tx to raw tx string %s", rawTx)
+	rawTx, err := bobTx.ToRawTxString()
+	if err != nil || rawTx != "" {
+		t.Errorf("Failed to convert Bob tx to raw tx string %s %s", rawTx, err)
 	}
 }
 

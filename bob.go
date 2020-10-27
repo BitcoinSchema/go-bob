@@ -15,6 +15,9 @@ import (
 	"github.com/libsv/libsv/transaction/output"
 )
 
+// OP_SWAP is 0x7c which is what "|" will be detected as
+const asmProtocolDelimiter = "OP_SAWP"
+
 // E has address and value information
 type E struct {
 	A string `json:"a,omitempty" bson:"a,omitempty"`
@@ -98,6 +101,7 @@ func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 
 	// Set the inputs
 	for inIdx, i := range tx.Inputs {
+
 		bobInput := Input{
 			I: uint8(inIdx),
 			Tape: []Tape{{
@@ -106,7 +110,7 @@ func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 					B: base64.RawStdEncoding.EncodeToString(i.ToBytes(false)),
 					S: i.String(),
 				}},
-				I: 0, // TODO: Fill this in from the pipe splitting loop index
+				I: 0,
 			}},
 			E: E{
 				H: i.PreviousTxID,
@@ -117,9 +121,6 @@ func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 	}
 
 	// Process outputs
-
-	// OP_SWAP is 0x7c which is what "|" will be detected as
-	var asmProtocolDelimiter = "OP_SAWP"
 
 	for idxOut, o := range tx.Outputs {
 		var adr string
@@ -193,13 +194,18 @@ func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 	return nil
 }
 
-// ToRawTxString converts the BOBTx to a libsv.transaction, and outputs the raw hex
-func (t *BobTx) ToRawTxString() string {
+// ToTx returns a transaction.Transaction
+func (t *BobTx) ToTx() (*transaction.Transaction, error) {
 
 	tx := transaction.New()
 
+	log.Printf("Processing bob tx. Ins: %d, Outs: %d ~~~~~ %+v", len(t.In), len(t.Out), t)
+
 	for _, in := range t.In {
-		// TODO: assemble the script from the BOB parts
+		if len(in.Tape) == 0 || len(in.Tape[0].Cell) == 0 {
+			return nil, fmt.Errorf("Failed to process inputs. More tapes or cells than expected. %+v", in.Tape)
+		}
+		log.Println("In Tapes", len(in.Tape))
 		builtPrevTxScript := in.Tape[0].Cell[0].H
 		prevTxScript, _ := script.NewFromHexString(builtPrevTxScript)
 
@@ -215,16 +221,47 @@ func (t *BobTx) ToRawTxString() string {
 
 	// add outputs
 	for _, out := range t.Out {
-		builtLockingScript := out.Tape[0].Cell[0].B
-		lockingScript, _ := script.NewFromHexString(builtLockingScript)
+		// Build the locking script
+		var lockScriptAsm []string //out.Tape[0].Cell[0].B
+		log.Println("Out Tapes", len(out.Tape))
+		for tapeIdx, tape := range out.Tape {
+			for cellIdx, cell := range tape.Cell {
+				if cellIdx == 0 && tapeIdx > 1 {
+					// add the separator back in
+					log.Println("Appending", asmProtocolDelimiter)
+					lockScriptAsm = append(lockScriptAsm, asmProtocolDelimiter)
+				}
+				log.Println("Appending", cell.H)
+
+				if len(cell.H) > 0 {
+					lockScriptAsm = append(lockScriptAsm, cell.H)
+				} else if len(cell.Ops) > 0 {
+					lockScriptAsm = append(lockScriptAsm, cell.Ops)
+				}
+			}
+		}
+
+		log.Printf("Assembed asm %s", lockScriptAsm)
+		lockingScript, _ := script.NewFromASM(strings.Join(lockScriptAsm, " "))
 
 		o := &output.Output{
-			Satoshis:      uint64(t.Out[0].E.V),
+			Satoshis:      uint64(out.E.V),
 			LockingScript: lockingScript,
 		}
+
 		tx.AddOutput(o)
 	}
-	return tx.ToString()
+
+	return tx, nil
+}
+
+// ToRawTxString converts the BOBTx to a libsv.transaction, and outputs the raw hex
+func (t *BobTx) ToRawTxString() (string, error) {
+	tx, err := t.ToTx()
+	if err != nil {
+		return "", err
+	}
+	return tx.ToString(), nil
 }
 
 // FromBytes takes a BOB formatted tx string as bytes
