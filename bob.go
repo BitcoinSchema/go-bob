@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/libsv/libsv/script"
@@ -121,31 +120,24 @@ func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 	}
 
 	// Process outputs
-
 	for idxOut, o := range tx.Outputs {
 		var adr string
 
-		outPubKeyHash, err := o.LockingScript.GetPublicKeyHash()
-		if err != nil {
-			log.Printf("oh no 1 %x: %s", outPubKeyHash, err)
-		}
+		// Try to get a pubkeyhash (ignore fail when this is not a locking script)
+		outPubKeyHash, _ := o.LockingScript.GetPublicKeyHash()
 		if len(outPubKeyHash) > 0 {
 			outAddress, err := address.NewFromPublicKeyHash(outPubKeyHash, true)
 			if err != nil {
-				return fmt.Errorf("oh no 2 %x: %s", outPubKeyHash, err)
+				return fmt.Errorf("Failed to get address from pubkeyhash %x: %s", outPubKeyHash, err)
 			}
 			adr = outAddress.AddressString
 		}
 
-		// Inspect OP_RETURN data
-		// Find OP_FALSE + OP_RETURN -OR- OP_RETURN
-		// Those go in the first tape
+		// Initialize out tapes and locking script asm
 		asm, _ := o.LockingScript.ToASM()
-		fmt.Println("Locking script", asm)
 		pushdatas := strings.Split(asm, " ")
 
 		var outTapes []Tape
-		// TODO: Find | pushdata, split into tapes
 		bobOutput := Output{
 			I:    uint8(idxOut),
 			Tape: outTapes,
@@ -158,7 +150,6 @@ func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 		if len(pushdatas) > 0 {
 
 			for pdIdx, pushdata := range pushdatas {
-				log.Printf("Pushdata %d: %s \n", pdIdx, pushdata)
 				pushdataBytes, _ := hex.DecodeString(pushdata)
 				b64String := base64.StdEncoding.EncodeToString([]byte(pushdataBytes))
 
@@ -174,14 +165,10 @@ func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 
 				// Note: OP_SWAP is 0x7c which is also ascii "|" which is our protocol separator. This is not used as OP_SWAP at all since this is in the script after the OP_FALSE
 				if "OP_RETURN" == pushdata || asmProtocolDelimiter == pushdata {
-					log.Println("End of tape detected", pushdata)
 					outTapes = append(outTapes, currentTape)
 					currentTape = Tape{}
 				}
 			}
-
-			//
-
 		}
 		// Add the trailing tape
 		outTapes = append(outTapes, currentTape)
@@ -196,16 +183,12 @@ func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 
 // ToTx returns a transaction.Transaction
 func (t *BobTx) ToTx() (*transaction.Transaction, error) {
-
 	tx := transaction.New()
-
-	log.Printf("Processing bob tx. Ins: %d, Outs: %d ~~~~~ %+v", len(t.In), len(t.Out), t)
 
 	for _, in := range t.In {
 		if len(in.Tape) == 0 || len(in.Tape[0].Cell) == 0 {
 			return nil, fmt.Errorf("Failed to process inputs. More tapes or cells than expected. %+v", in.Tape)
 		}
-		log.Println("In Tapes", len(in.Tape))
 		builtPrevTxScript := in.Tape[0].Cell[0].H
 		prevTxScript, _ := script.NewFromHexString(builtPrevTxScript)
 
@@ -222,16 +205,13 @@ func (t *BobTx) ToTx() (*transaction.Transaction, error) {
 	// add outputs
 	for _, out := range t.Out {
 		// Build the locking script
-		var lockScriptAsm []string //out.Tape[0].Cell[0].B
-		log.Println("Out Tapes", len(out.Tape))
+		var lockScriptAsm []string
 		for tapeIdx, tape := range out.Tape {
 			for cellIdx, cell := range tape.Cell {
 				if cellIdx == 0 && tapeIdx > 1 {
 					// add the separator back in
-					log.Println("Appending", asmProtocolDelimiter)
 					lockScriptAsm = append(lockScriptAsm, asmProtocolDelimiter)
 				}
-				log.Println("Appending", cell.H)
 
 				if len(cell.H) > 0 {
 					lockScriptAsm = append(lockScriptAsm, cell.H)
@@ -241,9 +221,7 @@ func (t *BobTx) ToTx() (*transaction.Transaction, error) {
 			}
 		}
 
-		log.Printf("Assembed asm %s", lockScriptAsm)
 		lockingScript, _ := script.NewFromASM(strings.Join(lockScriptAsm, " "))
-
 		o := &output.Output{
 			Satoshis:      uint64(out.E.V),
 			LockingScript: lockingScript,

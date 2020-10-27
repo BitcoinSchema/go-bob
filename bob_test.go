@@ -18,7 +18,7 @@ func TestFromString(t *testing.T) {
 	}
 
 	if bobData.Tx.H != "207eaadc096849e037b8944df21a8bba6d91d8445848db047c0a3f963121e19d" {
-		t.Error("From String Failed")
+		t.Error("From String Failed", bobData.Tx.H)
 	}
 
 }
@@ -45,13 +45,17 @@ func TestFromTx(t *testing.T) {
 }
 
 func TestToTx(t *testing.T) {
+
 	bobTx := New()
 	bobTx.FromString(sampleBobTx)
 
 	tx, err := bobTx.ToTx()
+	if err != nil {
+		t.Errorf("Failed to create tx %s", err)
+	}
 
-	if err != nil && tx.ToString() != "0100000001f15a9d3c550c14e12ca066ad09edff31432f1e9f45894ecff5b70c8354c81f3d0100000000000000000200000000000000000000000000000000000000000000" {
-		t.Errorf("Unexpected tx result %s", tx.ToString())
+	if tx.GetTxID() != bobTx.Tx.H {
+		t.Errorf("Unexpected tx result %s %s %s", tx.ToString(), bobTx.Tx.H, tx.GetTxID())
 	}
 }
 
