@@ -8,8 +8,11 @@ import (
 	"log"
 	"strings"
 
+	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/script/address"
 	"github.com/libsv/libsv/transaction"
+	"github.com/libsv/libsv/transaction/input"
+	"github.com/libsv/libsv/transaction/output"
 )
 
 // E has address and value information
@@ -188,6 +191,40 @@ func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 	}
 
 	return nil
+}
+
+// ToRawTxString converts the BOBTx to a libsv.transaction, and outputs the raw hex
+func (t *BobTx) ToRawTxString() string {
+
+	tx := transaction.New()
+
+	for _, in := range t.In {
+		// TODO: assemble the script from the BOB parts
+		builtPrevTxScript := in.Tape[0].Cell[0].H
+		prevTxScript, _ := script.NewFromHexString(builtPrevTxScript)
+
+		// add inputs
+		i := &input.Input{
+			PreviousTxID:       in.E.H,
+			PreviousTxOutIndex: uint32(in.E.I),
+			PreviousTxSatoshis: uint64(in.E.V),
+			PreviousTxScript:   prevTxScript,
+		}
+		tx.AddInput(i)
+	}
+
+	// add outputs
+	for _, out := range t.Out {
+		builtLockingScript := out.Tape[0].Cell[0].B
+		lockingScript, _ := script.NewFromHexString(builtLockingScript)
+
+		o := &output.Output{
+			Satoshis:      uint64(t.Out[0].E.V),
+			LockingScript: lockingScript,
+		}
+		tx.AddOutput(o)
+	}
+	return tx.ToString()
 }
 
 // FromBytes takes a BOB formatted tx string as bytes

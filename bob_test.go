@@ -44,6 +44,17 @@ func TestFromTx(t *testing.T) {
 
 }
 
+func TestToRawTxString(t *testing.T) {
+	bobTx := New()
+	bobTx.FromString(sampleBobTx)
+
+	rawTx := bobTx.ToRawTxString()
+
+	if rawTx != "" {
+		t.Errorf("Failed to convert Bob tx to raw tx string %s", rawTx)
+	}
+}
+
 func TestFromBadString(t *testing.T) {
 	bobBadStrings := New()
 	err := bobBadStrings.FromString(sampleBobTxBadStrings)

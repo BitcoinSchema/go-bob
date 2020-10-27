@@ -31,6 +31,53 @@ type Tx struct {
 }
 ```
 
+## Features
+
+### BOB From libsv.Transaction
+
+```go
+// BOB from libsv.transaction
+bobData := bob.New()
+err = bobData.FromTx(tx)
+if err != nil {
+  return err
+}
+
+```
+
+### BOB to libsv.Transaction
+
+```go
+// BOB from libsv.transaction
+bobData := bob.New()
+tx, err = bobData.ToTx()
+if err != nil {
+  return err
+}
+
+```
+
+### BOB to string
+
+```go
+// BOB formatted JSON string
+bobData := bob.New()
+tx = bobData.ToString()
+
+```
+
+### BOB to raw tx string
+
+```go
+// BOB to raw tx string
+bobData := bob.New()
+tx, err = bobData.ToRawTxString()
+if err != nil {
+  return err
+}
+
+```
+
 ## ToDo
 
 - FromRawTx
