@@ -69,7 +69,7 @@ tx, err = bobData.ToRawTxString()
 
 ```
 
-## BOB from raw tx string
+### BOB from raw tx string
 
 ```go
 // BOB from raw tx string
