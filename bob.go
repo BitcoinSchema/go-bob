@@ -1,8 +1,15 @@
 package bob
 
 import (
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
+	"strings"
+
+	"github.com/libsv/libsv/script/address"
+	"github.com/libsv/libsv/transaction"
 )
 
 // E has address and value information
@@ -58,7 +65,7 @@ type TxInfo struct {
 }
 
 // Tx is a BOB formatted Bitcoin transaction
-type Tx struct {
+type BobTx struct {
 	ID  string   `json:"_id"`
 	Blk Blk      `json:"blk"`
 	Tx  TxInfo   `json:"tx"`
@@ -67,12 +74,12 @@ type Tx struct {
 }
 
 // New creates a new bob tx
-func New() *Tx {
-	return &Tx{}
+func New() *BobTx {
+	return &BobTx{}
 }
 
 // FromString takes a BOB formatted string
-func (t *Tx) FromString(line string) error {
+func (t *BobTx) FromString(line string) error {
 	err := t.FromBytes([]byte(line))
 	if err != nil {
 		return err
@@ -80,8 +87,111 @@ func (t *Tx) FromString(line string) error {
 	return nil
 }
 
+// FromTx takes a libsv.Transaction
+func (t *BobTx) FromTx(tx *transaction.Transaction) error {
+
+	// Set the transaction ID
+	t.Tx.H = tx.GetTxID()
+
+	// Set the inputs
+	for inIdx, i := range tx.Inputs {
+		bobInput := Input{
+			I: uint8(inIdx),
+			Tape: []Tape{{
+				Cell: []Cell{{
+					H: hex.EncodeToString(i.ToBytes(false)),
+					B: base64.RawStdEncoding.EncodeToString(i.ToBytes(false)),
+					S: i.String(),
+				}},
+				I: 0, // TODO: Fill this in from the pipe splitting loop index
+			}},
+			E: E{
+				H: i.PreviousTxID,
+			},
+		}
+
+		t.In = append(t.In, bobInput)
+	}
+
+	// Process outputs
+
+	// OP_SWAP is 0x7c which is what "|" will be detected as
+	var asmProtocolDelimiter = "OP_SAWP"
+
+	for idxOut, o := range tx.Outputs {
+		var adr string
+
+		outPubKeyHash, err := o.LockingScript.GetPublicKeyHash()
+		if err != nil {
+			log.Printf("oh no 1 %x: %s", outPubKeyHash, err)
+		}
+		if len(outPubKeyHash) > 0 {
+			outAddress, err := address.NewFromPublicKeyHash(outPubKeyHash, true)
+			if err != nil {
+				return fmt.Errorf("oh no 2 %x: %s", outPubKeyHash, err)
+			}
+			adr = outAddress.AddressString
+		}
+
+		// Inspect OP_RETURN data
+		// Find OP_FALSE + OP_RETURN -OR- OP_RETURN
+		// Those go in the first tape
+		asm, _ := o.LockingScript.ToASM()
+		fmt.Println("Locking script", asm)
+		pushdatas := strings.Split(asm, " ")
+
+		var outTapes []Tape
+		// TODO: Find | pushdata, split into tapes
+		bobOutput := Output{
+			I:    uint8(idxOut),
+			Tape: outTapes,
+			E: E{
+				A: adr,
+			},
+		}
+
+		var currentTape Tape
+		if len(pushdatas) > 0 {
+
+			for pdIdx, pushdata := range pushdatas {
+				log.Printf("Pushdata %d: %s \n", pdIdx, pushdata)
+				pushdataBytes, _ := hex.DecodeString(pushdata)
+				b64String := base64.StdEncoding.EncodeToString([]byte(pushdataBytes))
+
+				if pushdata != asmProtocolDelimiter {
+					currentTape.Cell = append(currentTape.Cell, Cell{
+						B:  b64String,
+						H:  pushdata,
+						S:  string(pushdataBytes),
+						I:  uint8(idxOut),
+						II: uint8(pdIdx),
+					})
+				}
+
+				// Note: OP_SWAP is 0x7c which is also ascii "|" which is our protocol separator. This is not used as OP_SWAP at all since this is in the script after the OP_FALSE
+				if "OP_RETURN" == pushdata || asmProtocolDelimiter == pushdata {
+					log.Println("End of tape detected", pushdata)
+					outTapes = append(outTapes, currentTape)
+					currentTape = Tape{}
+				}
+			}
+
+			//
+
+		}
+		// Add the trailing tape
+		outTapes = append(outTapes, currentTape)
+
+		bobOutput.Tape = outTapes
+
+		t.Out = append(t.Out, bobOutput)
+	}
+
+	return nil
+}
+
 // FromBytes takes a BOB formatted tx string as bytes
-func (t *Tx) FromBytes(line []byte) error {
+func (t *BobTx) FromBytes(line []byte) error {
 	if err := json.Unmarshal(line, &t); err != nil {
 		fmt.Println("Error:", err)
 		return err
