@@ -72,11 +72,12 @@ type TxInfo struct {
 
 // Tx is a BOB formatted Bitcoin transaction
 type BobTx struct {
-	ID  string   `json:"_id"`
-	Blk Blk      `json:"blk"`
-	Tx  TxInfo   `json:"tx"`
-	In  []Input  `json:"in"`
-	Out []Output `json:"out"`
+	ID   string   `json:"_id"`
+	Blk  Blk      `json:"blk"`
+	Tx   TxInfo   `json:"tx"`
+	In   []Input  `json:"in"`
+	Out  []Output `json:"out"`
+	Lock uint32   `json:"lock"`
 }
 
 // New creates a new bob tx
@@ -186,27 +187,41 @@ func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 func (t *BobTx) ToTx() (*transaction.Transaction, error) {
 	tx := transaction.New()
 
+	tx.Locktime = t.Lock
+
 	for _, in := range t.In {
 
 		if len(in.Tape) == 0 || len(in.Tape[0].Cell) == 0 {
 			return nil, fmt.Errorf("Failed to process inputs. More tapes or cells than expected. %+v", in.Tape)
 		}
 
-		unlockingScript, _ := script.NewP2PKHFromAddress(in.E.A)
-		builtPrevTxScript, _ := script.NewFromHexString(in.Tape[0].Cell[0].H)
+		prevTxScript, _ := script.NewP2PKHFromAddress(in.E.A)
 
-		log.Println("BuiltPrevTxScript", builtPrevTxScript.ToString())
-		// prevTxScript, _ := script.NewFromHexString(builtPrevTxScript)
+		var scriptAsm []string
+		for _, cell := range in.Tape[0].Cell {
+			log.Printf("This cell %+v", cell)
+
+			cellData := cell.H
+			scriptAsm = append(scriptAsm, cellData)
+		}
+
+		builtUnlockScript, err := script.NewFromASM(strings.Join(scriptAsm, " "))
+		if err != nil {
+			log.Println("Failed to get script from asm", scriptAsm, err)
+		}
+		log.Println("BuiltPrevTxScript", builtUnlockScript.ToString())
 
 		// add inputs
 		i := &input.Input{
 			PreviousTxID:       in.E.H,
 			PreviousTxOutIndex: uint32(in.E.I),
 			PreviousTxSatoshis: uint64(in.E.V),
-			PreviousTxScript:   builtPrevTxScript,
-			UnlockingScript:    unlockingScript,
+			PreviousTxScript:   prevTxScript,
+			UnlockingScript:    builtUnlockScript,
 			SequenceNumber:     in.Seq,
 		}
+
+		log.Printf("input %+v", i)
 		tx.AddInput(i)
 	}
 
@@ -256,5 +271,38 @@ func (t *BobTx) FromBytes(line []byte) error {
 		fmt.Println("Error:", err)
 		return err
 	}
+
+	// Check for missing hex values and supply them
+	for outIdx, out := range t.Out {
+		for tapeIdx, tape := range out.Tape {
+			for cellIdx, cell := range tape.Cell {
+				if len(cell.H) == 0 && len(cell.B) > 0 {
+					// base 64 decode cell.B and encode it to hex string
+					cellBytes, e := base64.StdEncoding.DecodeString(cell.B)
+					if e != nil {
+						fmt.Println(e)
+					}
+					log.Println("Replacing!", hex.EncodeToString(cellBytes))
+					t.Out[outIdx].Tape[tapeIdx].Cell[cellIdx].H = hex.EncodeToString(cellBytes)
+				}
+			}
+		}
+	}
+	for inIdx, in := range t.In {
+		for tapeIdx, tape := range in.Tape {
+			for cellIdx, cell := range tape.Cell {
+				if len(cell.H) == 0 && len(cell.B) > 0 {
+					// base 64 decode cell.B and encode it to hex string
+					cellBytes, e := base64.StdEncoding.DecodeString(cell.B)
+					if e != nil {
+						fmt.Println(e)
+					}
+					log.Println("Replacing!", hex.EncodeToString(cellBytes))
+					t.In[inIdx].Tape[tapeIdx].Cell[cellIdx].H = hex.EncodeToString(cellBytes)
+				}
+			}
+		}
+	}
+
 	return nil
 }
