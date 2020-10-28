@@ -147,7 +147,7 @@ func NewFromTx(tx *transaction.Transaction) (bobTx *Tx, err error) {
 func (t *Tx) FromBytes(line []byte) error {
 	tu := new(TxUnmarshal)
 	if err := json.Unmarshal(line, &tu); err != nil {
-		return fmt.Errorf("error parsing line: %s, %s", line, err)
+		return fmt.Errorf("error parsing line: %v, %w", line, err)
 	}
 
 	// The out.E.A field can be either a boolean or a string
@@ -159,7 +159,7 @@ func (t *Tx) FromBytes(line []byte) error {
 			I:    out.I,
 			Tape: out.Tape,
 			E: E{
-				A: fmt.Sprintf("%s", out.E.A),
+				A: fmt.Sprintf("%s", out.E.A), // todo: test this with (string) and (bool)
 				V: out.E.V,
 				I: out.E.I,
 				H: out.E.H,
@@ -206,7 +206,6 @@ func (t *Tx) FromRawTxString(rawTxString string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Calling with %+v", t)
 	return t.FromTx(tx)
 }
 
@@ -252,7 +251,7 @@ func (t *Tx) FromTx(tx *transaction.Transaction) error {
 		if len(outPubKeyHash) > 0 {
 			outAddress, err := address.NewFromPublicKeyHash(outPubKeyHash, true)
 			if err != nil {
-				return fmt.Errorf("failed to get address from pubkeyhash %x: %s", outPubKeyHash, err)
+				return fmt.Errorf("failed to get address from pubkeyhash %x: %w", outPubKeyHash, err)
 			}
 			adr = outAddress.AddressString
 		}
@@ -346,7 +345,7 @@ func (t *Tx) ToTx() (*transaction.Transaction, error) {
 
 		builtUnlockScript, err := script.NewFromASM(strings.Join(scriptAsm, " "))
 		if err != nil {
-			return nil, fmt.Errorf("failed to get script from asm: %v error: %s", scriptAsm, err.Error())
+			return nil, fmt.Errorf("failed to get script from asm: %v error: %w", scriptAsm, err)
 		}
 
 		// add inputs
