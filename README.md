@@ -163,7 +163,7 @@ type Tx struct {
 }
 ```
   
-#### BOB Helpers
+### BOB Helpers
 
 **BOB from bytes ([bitbus](https://docs.bitbus.network/#/))**
 ```go 
