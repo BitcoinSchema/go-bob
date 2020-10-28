@@ -114,15 +114,12 @@ type Tx struct {
 	Lock uint32   `json:"lock"`
 }
 
-// NewFromBytes creates a new BobTx from a NDJSON line representing a bob transaction,
+// NewFromBytes creates a new BOB Tx from a NDJSON line representing a BOB transaction,
 // as returned by the bitbus 2 API
 func NewFromBytes(line []byte) (bobTx *Tx, err error) {
 	bobTx = new(Tx)
 	err = bobTx.FromBytes(line)
-	if err != nil {
-		return nil, err
-	}
-	return bobTx, nil
+	return
 }
 
 // NewFromRawTxString creates a new BobTx from a hex encoded raw tx string
