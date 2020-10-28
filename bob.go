@@ -18,6 +18,31 @@ import (
 // OP_SWAP is 0x7c which is what "|" will be detected as
 const asmProtocolDelimiter = "OP_SAWP"
 
+// BobTxUnmarshal is a BOB formatted Bitcoin transaction that includes interfaces where types may change
+type BobTxUnmarshal struct {
+	ID   string            `json:"_id"`
+	Blk  Blk               `json:"blk"`
+	Tx   TxInfo            `json:"tx"`
+	In   []Input           `json:"in"`
+	Out  []OutputUnmarshal `json:"out"`
+	Lock uint32            `json:"lock"`
+}
+
+// OutputUnmarshal is a transaction output
+type OutputUnmarshal struct {
+	I    uint8      `json:"i"`
+	Tape []Tape     `json:"tape"`
+	E    EUnmarshal `json:"e,omitempty"`
+}
+
+// EUnmarshal has address and value information
+type EUnmarshal struct {
+	A interface{} `json:"a,omitempty" bson:"a,omitempty"`
+	V uint32      `json:"v,omitempty" bson:"v,omitempty"`
+	I uint8       `json:"i" bson:"i"`
+	H string      `json:"h,omitempty" bson:"h,omitempty"`
+}
+
 // E has address and value information
 type E struct {
 	A string `json:"a,omitempty" bson:"a,omitempty"`
@@ -70,7 +95,7 @@ type TxInfo struct {
 	H string `json:"h"`
 }
 
-// Tx is a BOB formatted Bitcoin transaction
+// BobTx is a BOB formatted Bitcoin transaction
 type BobTx struct {
 	ID   string   `json:"_id"`
 	Blk  Blk      `json:"blk"`
@@ -80,28 +105,107 @@ type BobTx struct {
 	Lock uint32   `json:"lock"`
 }
 
-// New creates a new bob tx
-func New() *BobTx {
-	return &BobTx{}
+// NewFromBytes creates a new BobTx from a NDJSON line representing a bob transaction, suck as returned by the bitbus 2 API
+func NewFromBytes(line []byte) (bobTx *BobTx, err error) {
+	bobTx = new(BobTx)
+	err = bobTx.FromBytes(line)
+	if err != nil {
+		return nil, err
+	}
+	return bobTx, nil
 }
 
-// FromString takes a BOB formatted string
-func (t *BobTx) FromString(line string) error {
-	err := t.FromBytes([]byte(line))
-	if err != nil {
-		return err
+// NewFromRawTxString creates a new BobTx from a hex encoded raw tx string
+func NewFromRawTxString(rawTxString string) (bobTx *BobTx, err error) {
+	bobTx = new(BobTx)
+	err = bobTx.FromRawTxString(rawTxString)
+	return
+}
+
+// NewFromString creates a new BobTx from a BOB formatted string
+func NewFromString(line string) (bobTx *BobTx, err error) {
+	bobTx = new(BobTx)
+	err = bobTx.FromString(line)
+	return
+}
+
+// NewFromTx creates a new BobTx from a libsv Transaction
+func NewFromTx(tx *transaction.Transaction) (bobTx *BobTx, err error) {
+	bobTx = new(BobTx)
+	err = bobTx.FromTx(tx)
+	return
+}
+
+// FromBytes takes a BOB formatted tx string as bytes
+func (t *BobTx) FromBytes(line []byte) error {
+	tu := new(BobTxUnmarshal)
+	if err := json.Unmarshal(line, &tu); err != nil {
+		return fmt.Errorf("Error parsing line: %s, %s", line, err)
 	}
+
+	// The out.E.A field can be either a boolean or a string
+	// So we need to unmarshal into an interface, and fix the normal struct the user of this lib will work with (so they dont have to format the interface themselves)
+	var fixedOuts []Output
+	for _, out := range tu.Out {
+		fixedOuts = append(fixedOuts, Output{
+			I:    out.I,
+			Tape: out.Tape,
+			E: E{
+				A: fmt.Sprintf("%s", out.E.A),
+				V: out.E.V,
+				I: out.E.I,
+				H: out.E.H,
+			},
+		})
+	}
+	t.In = tu.In
+	t.Blk = tu.Blk
+	t.ID = tu.ID
+	t.Out = fixedOuts
+	t.Lock = tu.Lock
+	t.Tx = tu.Tx
+
+	// Check for missing hex values and supply them
+	for outIdx, out := range t.Out {
+		for tapeIdx, tape := range out.Tape {
+			for cellIdx, cell := range tape.Cell {
+				if len(cell.H) == 0 && len(cell.B) > 0 {
+					// base 64 decode cell.B and encode it to hex string
+					cellBytes, _ := base64.StdEncoding.DecodeString(cell.B)
+					t.Out[outIdx].Tape[tapeIdx].Cell[cellIdx].H = hex.EncodeToString(cellBytes)
+				}
+			}
+		}
+	}
+	for inIdx, in := range t.In {
+		for tapeIdx, tape := range in.Tape {
+			for cellIdx, cell := range tape.Cell {
+				if len(cell.H) == 0 && len(cell.B) > 0 {
+					// base 64 decode cell.B and encode it to hex string
+					cellBytes, _ := base64.StdEncoding.DecodeString(cell.B)
+					t.In[inIdx].Tape[tapeIdx].Cell[cellIdx].H = hex.EncodeToString(cellBytes)
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
 // FromRawTxString takes a hex encoded tx string
 func (t *BobTx) FromRawTxString(rawTxString string) error {
-
 	tx, err := transaction.NewFromString(rawTxString)
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Calling with %+v", t)
 	return t.FromTx(tx)
+}
+
+// FromString takes a BOB formatted string
+func (t *BobTx) FromString(line string) (err error) {
+	err = t.FromBytes([]byte(line))
+	return
 }
 
 // FromTx takes a libsv.Transaction
@@ -174,7 +278,6 @@ func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 						II: uint8(pdIdx),
 					})
 				}
-
 				// Note: OP_SWAP is 0x7c which is also ascii "|" which is our protocol separator. This is not used as OP_SWAP at all since this is in the script after the OP_FALSE
 				if "OP_RETURN" == pushdata || asmProtocolDelimiter == pushdata {
 					outTapes = append(outTapes, currentTape)
@@ -182,15 +285,24 @@ func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 				}
 			}
 		}
+
 		// Add the trailing tape
 		outTapes = append(outTapes, currentTape)
-
 		bobOutput.Tape = outTapes
 
 		t.Out = append(t.Out, bobOutput)
 	}
 
 	return nil
+}
+
+// ToRawTxString converts the BOBTx to a libsv.transaction, and outputs the raw hex
+func (t *BobTx) ToRawTxString() (string, error) {
+	tx, err := t.ToTx()
+	if err != nil {
+		return "", err
+	}
+	return tx.ToString(), nil
 }
 
 // ToString returns a json string of bobTx
@@ -215,12 +327,10 @@ func (t *BobTx) ToTx() (*transaction.Transaction, error) {
 			return nil, fmt.Errorf("Failed to process inputs. More tapes or cells than expected. %+v", in.Tape)
 		}
 
-		prevTxScript, _ := script.NewP2PKHFromAddress(in.E.A)
+		prevTxScript, _ := script.NewP2PKHFromAddress(fmt.Sprintf("%s", in.E.A))
 
 		var scriptAsm []string
 		for _, cell := range in.Tape[0].Cell {
-			log.Printf("This cell %+v", cell)
-
 			cellData := cell.H
 			scriptAsm = append(scriptAsm, cellData)
 		}
@@ -229,7 +339,6 @@ func (t *BobTx) ToTx() (*transaction.Transaction, error) {
 		if err != nil {
 			log.Println("Failed to get script from asm", scriptAsm, err)
 		}
-		log.Println("BuiltPrevTxScript", builtUnlockScript.ToString())
 
 		// add inputs
 		i := &input.Input{
@@ -241,7 +350,6 @@ func (t *BobTx) ToTx() (*transaction.Transaction, error) {
 			SequenceNumber:     in.Seq,
 		}
 
-		log.Printf("input %+v", i)
 		tx.AddInput(i)
 	}
 
@@ -274,47 +382,4 @@ func (t *BobTx) ToTx() (*transaction.Transaction, error) {
 	}
 
 	return tx, nil
-}
-
-// ToRawTxString converts the BOBTx to a libsv.transaction, and outputs the raw hex
-func (t *BobTx) ToRawTxString() (string, error) {
-	tx, err := t.ToTx()
-	if err != nil {
-		return "", err
-	}
-	return tx.ToString(), nil
-}
-
-// FromBytes takes a BOB formatted tx string as bytes
-func (t *BobTx) FromBytes(line []byte) error {
-	if err := json.Unmarshal(line, &t); err != nil {
-		fmt.Println("Error:", err)
-		return err
-	}
-
-	// Check for missing hex values and supply them
-	for outIdx, out := range t.Out {
-		for tapeIdx, tape := range out.Tape {
-			for cellIdx, cell := range tape.Cell {
-				if len(cell.H) == 0 && len(cell.B) > 0 {
-					// base 64 decode cell.B and encode it to hex string
-					cellBytes, _ := base64.StdEncoding.DecodeString(cell.B)
-					t.Out[outIdx].Tape[tapeIdx].Cell[cellIdx].H = hex.EncodeToString(cellBytes)
-				}
-			}
-		}
-	}
-	for inIdx, in := range t.In {
-		for tapeIdx, tape := range in.Tape {
-			for cellIdx, cell := range tape.Cell {
-				if len(cell.H) == 0 && len(cell.B) > 0 {
-					// base 64 decode cell.B and encode it to hex string
-					cellBytes, _ := base64.StdEncoding.DecodeString(cell.B)
-					t.In[inIdx].Tape[tapeIdx].Cell[cellIdx].H = hex.EncodeToString(cellBytes)
-				}
-			}
-		}
-	}
-
-	return nil
 }

@@ -1,6 +1,6 @@
 ## go-bob
 
-Library for working with [BOB](https://) formatted transactions, written in Go.
+Library for working with [BOB](https://bob.planaria.network/) formatted transactions, written in Go.
 
 ## Usage
 
@@ -11,18 +11,17 @@ if err == io.EOF {
   break
 }
 
-bobData := bob.New()
-err = bobData.FromBytes(line)
+bobTx, err = bobData.NewFromBytes(line)
 if err != nil {
   return err
 }
 
 ```
 
-bobData will be of this type:
+bobTx will be of this type:
 
 ```go
-type Tx struct {
+type BobTx struct {
 	ID  string   `json:"_id"`
 	Blk Blk      `json:"blk"`
 	Tx  TxInfo   `json:"tx"`
@@ -31,41 +30,21 @@ type Tx struct {
 }
 ```
 
-## Features
+## Helpers
+
+### BOB From bytes
+
+```go
+// BOB from libsv.transaction
+bobTx, err = NewFromTx(tx)
+
+```
 
 ### BOB From libsv.Transaction
 
 ```go
 // BOB from libsv.transaction
-bobData := bob.New()
-err = bobData.FromTx(tx)
-
-```
-
-### BOB to libsv.Transaction
-
-```go
-// BOB from libsv.transaction
-bobData := bob.New()
-tx, err = bobData.ToTx()
-
-```
-
-### BOB to string
-
-```go
-// BOB formatted JSON string
-bobData := bob.New()
-tx, err = bobData.ToString()
-
-```
-
-### BOB to raw tx string
-
-```go
-// BOB to raw tx string
-bobData := bob.New()
-tx, err = bobData.ToRawTxString()
+bobTx, err = NewFromTx(tx)
 
 ```
 
@@ -73,7 +52,30 @@ tx, err = bobData.ToRawTxString()
 
 ```go
 // BOB from raw tx string
-bobTx := New()
-err := bobTx.FromRawTxString(rawTxString)
+bobTx, err := bob.NewFromRawTxString(rawTxString)
+
+```
+
+### BOB to libsv.Transaction
+
+```go
+// BOB from libsv.transaction
+tx, err = bobTx.ToTx()
+
+```
+
+### BOB to string
+
+```go
+// BOB formatted JSON string
+tx, err = bobTx.ToString()
+
+```
+
+### BOB to raw tx string
+
+```go
+// BOB to raw tx string
+tx, err = bobTx.ToRawTxString()
 
 ```
