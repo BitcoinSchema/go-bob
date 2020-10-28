@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/libsv/libsv/script"
@@ -18,13 +17,17 @@ import (
 // OP_SWAP is 0x7c which is what "|" will be detected as
 const asmProtocolDelimiter = "OP_SAWP"
 
-// BobTxUnmarshal is a BOB formatted Bitcoin transaction that includes interfaces where types may change
-type BobTxUnmarshal struct {
-	ID   string            `json:"_id"`
-	Blk  Blk               `json:"blk"`
-	Tx   TxInfo            `json:"tx"`
+// TxUnmarshal is a BOB formatted Bitcoin transaction that includes
+// interfaces where types may change
+//
+// DO NOT CHANGE ORDER - aligned for memory optimization (malign)
+//
+type TxUnmarshal struct {
 	In   []Input           `json:"in"`
 	Out  []OutputUnmarshal `json:"out"`
+	ID   string            `json:"_id"`
+	Tx   TxInfo            `json:"tx"`
+	Blk  Blk               `json:"blk"`
 	Lock uint32            `json:"lock"`
 }
 
@@ -55,7 +58,7 @@ type E struct {
 type Cell struct {
 	H   string `json:"h,omitempty" bson:"h,omitempty"`
 	B   string `json:"b,omitempty" bson:"b,omitempty"`
-	LB  string `json:"lb,omitempty" bson:"lb,omitempty`
+	LB  string `json:"lb,omitempty" bson:"lb,omitempty"`
 	S   string `json:"s,omitempty" bson:"s,omitempty"`
 	LS  string `json:"ls,omitempty" bson:"ls,omitempty"`
 	I   uint8  `json:"i" bson:"i"`
@@ -65,11 +68,14 @@ type Cell struct {
 }
 
 // Input is a transaction input
+//
+// DO NOT CHANGE ORDER - aligned for memory optimization (malign)
+//
 type Input struct {
-	I    uint8  `json:"i" bson:"i"`
-	Tape []Tape `json:"tape" bson:"tape"`
 	E    E      `json:"e" bson:"e"`
+	Tape []Tape `json:"tape" bson:"tape"`
 	Seq  uint32 `json:"seq" bson:"seq"`
+	I    uint8  `json:"i" bson:"i"`
 }
 
 // Tape is a tape
@@ -85,29 +91,33 @@ type Output struct {
 	E    E      `json:"e,omitempty"`
 }
 
-// Blk containst the block info
+// Blk contains the block info
 type Blk struct {
 	I uint32 `json:"i"`
 }
 
-// TxInfo conaints the transaction info
+// TxInfo contains the transaction info
 type TxInfo struct {
 	H string `json:"h"`
 }
 
-// BobTx is a BOB formatted Bitcoin transaction
-type BobTx struct {
-	ID   string   `json:"_id"`
-	Blk  Blk      `json:"blk"`
-	Tx   TxInfo   `json:"tx"`
+// Tx is a BOB formatted Bitcoin transaction
+//
+// DO NOT CHANGE ORDER - aligned for memory optimization (malign)
+//
+type Tx struct {
 	In   []Input  `json:"in"`
 	Out  []Output `json:"out"`
+	ID   string   `json:"_id"`
+	Tx   TxInfo   `json:"tx"`
+	Blk  Blk      `json:"blk"`
 	Lock uint32   `json:"lock"`
 }
 
-// NewFromBytes creates a new BobTx from a NDJSON line representing a bob transaction, suck as returned by the bitbus 2 API
-func NewFromBytes(line []byte) (bobTx *BobTx, err error) {
-	bobTx = new(BobTx)
+// NewFromBytes creates a new BobTx from a NDJSON line representing a bob transaction,
+// as returned by the bitbus 2 API
+func NewFromBytes(line []byte) (bobTx *Tx, err error) {
+	bobTx = new(Tx)
 	err = bobTx.FromBytes(line)
 	if err != nil {
 		return nil, err
@@ -116,36 +126,37 @@ func NewFromBytes(line []byte) (bobTx *BobTx, err error) {
 }
 
 // NewFromRawTxString creates a new BobTx from a hex encoded raw tx string
-func NewFromRawTxString(rawTxString string) (bobTx *BobTx, err error) {
-	bobTx = new(BobTx)
+func NewFromRawTxString(rawTxString string) (bobTx *Tx, err error) {
+	bobTx = new(Tx)
 	err = bobTx.FromRawTxString(rawTxString)
 	return
 }
 
 // NewFromString creates a new BobTx from a BOB formatted string
-func NewFromString(line string) (bobTx *BobTx, err error) {
-	bobTx = new(BobTx)
+func NewFromString(line string) (bobTx *Tx, err error) {
+	bobTx = new(Tx)
 	err = bobTx.FromString(line)
 	return
 }
 
 // NewFromTx creates a new BobTx from a libsv Transaction
-func NewFromTx(tx *transaction.Transaction) (bobTx *BobTx, err error) {
-	bobTx = new(BobTx)
+func NewFromTx(tx *transaction.Transaction) (bobTx *Tx, err error) {
+	bobTx = new(Tx)
 	err = bobTx.FromTx(tx)
 	return
 }
 
 // FromBytes takes a BOB formatted tx string as bytes
-func (t *BobTx) FromBytes(line []byte) error {
-	tu := new(BobTxUnmarshal)
+func (t *Tx) FromBytes(line []byte) error {
+	tu := new(TxUnmarshal)
 	if err := json.Unmarshal(line, &tu); err != nil {
-		return fmt.Errorf("Error parsing line: %s, %s", line, err)
+		return fmt.Errorf("error parsing line: %s, %s", line, err)
 	}
 
 	// The out.E.A field can be either a boolean or a string
-	// So we need to unmarshal into an interface, and fix the normal struct the user of this lib will work with (so they dont have to format the interface themselves)
-	var fixedOuts []Output
+	// So we need to unmarshal into an interface, and fix the normal struct the user
+	// of this lib will work with (so they dont have to format the interface themselves)
+	fixedOuts := make([]Output, 0)
 	for _, out := range tu.Out {
 		fixedOuts = append(fixedOuts, Output{
 			I:    out.I,
@@ -193,7 +204,7 @@ func (t *BobTx) FromBytes(line []byte) error {
 }
 
 // FromRawTxString takes a hex encoded tx string
-func (t *BobTx) FromRawTxString(rawTxString string) error {
+func (t *Tx) FromRawTxString(rawTxString string) error {
 	tx, err := transaction.NewFromString(rawTxString)
 	if err != nil {
 		return err
@@ -203,13 +214,13 @@ func (t *BobTx) FromRawTxString(rawTxString string) error {
 }
 
 // FromString takes a BOB formatted string
-func (t *BobTx) FromString(line string) (err error) {
+func (t *Tx) FromString(line string) (err error) {
 	err = t.FromBytes([]byte(line))
 	return
 }
 
 // FromTx takes a libsv.Transaction
-func (t *BobTx) FromTx(tx *transaction.Transaction) error {
+func (t *Tx) FromTx(tx *transaction.Transaction) error {
 
 	// Set the transaction ID
 	t.Tx.H = tx.GetTxID()
@@ -239,19 +250,19 @@ func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 	for idxOut, o := range tx.Outputs {
 		var adr string
 
-		// Try to get a pubkeyhash (ignore fail when this is not a locking script)
+		// Try to get a pub_key hash (ignore fail when this is not a locking script)
 		outPubKeyHash, _ := o.LockingScript.GetPublicKeyHash()
 		if len(outPubKeyHash) > 0 {
 			outAddress, err := address.NewFromPublicKeyHash(outPubKeyHash, true)
 			if err != nil {
-				return fmt.Errorf("Failed to get address from pubkeyhash %x: %s", outPubKeyHash, err)
+				return fmt.Errorf("failed to get address from pubkeyhash %x: %s", outPubKeyHash, err)
 			}
 			adr = outAddress.AddressString
 		}
 
 		// Initialize out tapes and locking script asm
 		asm, _ := o.LockingScript.ToASM()
-		pushdatas := strings.Split(asm, " ")
+		pushDatas := strings.Split(asm, " ")
 
 		var outTapes []Tape
 		bobOutput := Output{
@@ -263,23 +274,24 @@ func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 		}
 
 		var currentTape Tape
-		if len(pushdatas) > 0 {
+		if len(pushDatas) > 0 {
 
-			for pdIdx, pushdata := range pushdatas {
-				pushdataBytes, _ := hex.DecodeString(pushdata)
-				b64String := base64.StdEncoding.EncodeToString([]byte(pushdataBytes))
+			for pdIdx, pushData := range pushDatas {
+				pushDataBytes, _ := hex.DecodeString(pushData)
+				b64String := base64.StdEncoding.EncodeToString(pushDataBytes)
 
-				if pushdata != asmProtocolDelimiter {
+				if pushData != asmProtocolDelimiter {
 					currentTape.Cell = append(currentTape.Cell, Cell{
 						B:  b64String,
-						H:  pushdata,
-						S:  string(pushdataBytes),
+						H:  pushData,
+						S:  string(pushDataBytes),
 						I:  uint8(idxOut),
 						II: uint8(pdIdx),
 					})
 				}
-				// Note: OP_SWAP is 0x7c which is also ascii "|" which is our protocol separator. This is not used as OP_SWAP at all since this is in the script after the OP_FALSE
-				if "OP_RETURN" == pushdata || asmProtocolDelimiter == pushdata {
+				// Note: OP_SWAP is 0x7c which is also ascii "|" which is our protocol separator.
+				// This is not used as OP_SWAP at all since this is in the script after the OP_FALSE
+				if "OP_RETURN" == pushData || asmProtocolDelimiter == pushData {
 					outTapes = append(outTapes, currentTape)
 					currentTape = Tape{}
 				}
@@ -297,7 +309,7 @@ func (t *BobTx) FromTx(tx *transaction.Transaction) error {
 }
 
 // ToRawTxString converts the BOBTx to a libsv.transaction, and outputs the raw hex
-func (t *BobTx) ToRawTxString() (string, error) {
+func (t *Tx) ToRawTxString() (string, error) {
 	tx, err := t.ToTx()
 	if err != nil {
 		return "", err
@@ -306,7 +318,7 @@ func (t *BobTx) ToRawTxString() (string, error) {
 }
 
 // ToString returns a json string of bobTx
-func (t *BobTx) ToString() (string, error) {
+func (t *Tx) ToString() (string, error) {
 	// Create JSON from the instance data.
 	// ... Ignore errors.
 	b, err := json.Marshal(t)
@@ -316,7 +328,7 @@ func (t *BobTx) ToString() (string, error) {
 }
 
 // ToTx returns a transaction.Transaction
-func (t *BobTx) ToTx() (*transaction.Transaction, error) {
+func (t *Tx) ToTx() (*transaction.Transaction, error) {
 	tx := transaction.New()
 
 	tx.Locktime = t.Lock
@@ -324,10 +336,10 @@ func (t *BobTx) ToTx() (*transaction.Transaction, error) {
 	for _, in := range t.In {
 
 		if len(in.Tape) == 0 || len(in.Tape[0].Cell) == 0 {
-			return nil, fmt.Errorf("Failed to process inputs. More tapes or cells than expected. %+v", in.Tape)
+			return nil, fmt.Errorf("failed to process inputs. More tapes or cells than expected. %+v", in.Tape)
 		}
 
-		prevTxScript, _ := script.NewP2PKHFromAddress(fmt.Sprintf("%s", in.E.A))
+		prevTxScript, _ := script.NewP2PKHFromAddress(in.E.A)
 
 		var scriptAsm []string
 		for _, cell := range in.Tape[0].Cell {
@@ -337,7 +349,7 @@ func (t *BobTx) ToTx() (*transaction.Transaction, error) {
 
 		builtUnlockScript, err := script.NewFromASM(strings.Join(scriptAsm, " "))
 		if err != nil {
-			log.Println("Failed to get script from asm", scriptAsm, err)
+			return nil, fmt.Errorf("failed to get script from asm: %v error: %s", scriptAsm, err.Error())
 		}
 
 		// add inputs
