@@ -42,7 +42,7 @@ type OutputUnmarshal struct {
 type EUnmarshal struct {
 	A interface{} `json:"a,omitempty" bson:"a,omitempty"`
 	V uint32      `json:"v,omitempty" bson:"v,omitempty"`
-	I uint8       `json:"i" bson:"i"`
+	I uint32      `json:"i" bson:"i"`
 	H string      `json:"h,omitempty" bson:"h,omitempty"`
 }
 
@@ -50,7 +50,7 @@ type EUnmarshal struct {
 type E struct {
 	A string `json:"a,omitempty" bson:"a,omitempty"`
 	V uint32 `json:"v,omitempty" bson:"v,omitempty"`
-	I uint8  `json:"i" bson:"i"`
+	I uint32 `json:"i" bson:"i"`
 	H string `json:"h,omitempty" bson:"h,omitempty"`
 }
 
