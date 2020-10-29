@@ -41,7 +41,7 @@ type OutputUnmarshal struct {
 // EUnmarshal has address and value information
 type EUnmarshal struct {
 	A interface{} `json:"a,omitempty" bson:"a,omitempty"`
-	V uint32      `json:"v,omitempty" bson:"v,omitempty"`
+	V uint64      `json:"v,omitempty" bson:"v,omitempty"`
 	I uint32      `json:"i" bson:"i"`
 	H string      `json:"h,omitempty" bson:"h,omitempty"`
 }
@@ -49,7 +49,7 @@ type EUnmarshal struct {
 // E has address and value information
 type E struct {
 	A string `json:"a,omitempty" bson:"a,omitempty"`
-	V uint32 `json:"v,omitempty" bson:"v,omitempty"`
+	V uint64 `json:"v,omitempty" bson:"v,omitempty"`
 	I uint32 `json:"i" bson:"i"`
 	H string `json:"h,omitempty" bson:"h,omitempty"`
 }
@@ -352,7 +352,7 @@ func (t *Tx) ToTx() (*transaction.Transaction, error) {
 		i := &input.Input{
 			PreviousTxID:       in.E.H,
 			PreviousTxOutIndex: in.E.I,
-			PreviousTxSatoshis: uint64(in.E.V),
+			PreviousTxSatoshis: in.E.V,
 			PreviousTxScript:   prevTxScript,
 			UnlockingScript:    builtUnlockScript,
 			SequenceNumber:     in.Seq,
