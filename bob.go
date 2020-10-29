@@ -351,7 +351,7 @@ func (t *Tx) ToTx() (*transaction.Transaction, error) {
 		// add inputs
 		i := &input.Input{
 			PreviousTxID:       in.E.H,
-			PreviousTxOutIndex: uint32(in.E.I),
+			PreviousTxOutIndex: in.E.I,
 			PreviousTxSatoshis: uint64(in.E.V),
 			PreviousTxScript:   prevTxScript,
 			UnlockingScript:    builtUnlockScript,
