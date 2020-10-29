@@ -382,7 +382,7 @@ func (t *Tx) ToTx() (*transaction.Transaction, error) {
 
 		lockingScript, _ := script.NewFromASM(strings.Join(lockScriptAsm, " "))
 		o := &output.Output{
-			Satoshis:      uint64(out.E.V),
+			Satoshis:      out.E.V,
 			LockingScript: lockingScript,
 		}
 
