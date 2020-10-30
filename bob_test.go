@@ -409,15 +409,16 @@ func TestNewFromTxPanic(t *testing.T) {
 	}
 }
 
-func TestToTx(t *testing.T) {
+// TestTx_ToTx tests for nil case in ToTx()
+func TestTx_ToTx(t *testing.T) {
 
 	bobTx, err := NewFromString(sampleBobTx)
 	if err != nil {
 		t.Errorf("Failed to create bob tx %s", err)
 	}
 
-	tx, err := bobTx.ToTx()
-	if err != nil {
+	var tx *transaction.Transaction
+	if tx, err = bobTx.ToTx(); err != nil {
 		t.Errorf("Failed to create tx %s", err)
 	}
 
@@ -426,35 +427,97 @@ func TestToTx(t *testing.T) {
 	}
 }
 
-func TestToRawTxString(t *testing.T) {
+// ExampleTx_ToTx example using ToTx()
+func ExampleTx_ToTx() {
+	// Use an example TX
 	bobTx, err := NewFromString(sampleBobTx)
 	if err != nil {
-		t.Errorf("Failed to create bob tx %s", err)
+		fmt.Printf("error occurred: %s", err.Error())
+		return
 	}
 
-	rawTx, err := bobTx.ToRawTxString()
-	if err != nil || rawTx != "0100000001f15a9d3c550c14e12ca066ad09edff31432f1e9f45894ecff5b70c8354c81f3d010000006b483045022100f012c3bd3781091aa8e53cab2ffcb90acced8c65500b41086fd225e48c98c1d702200b8ff117b8ecd2b2d7e95551bc5a1b3bbcca8049864479a28bed9dc842a86804412103ef5bb22964d529c0af748d9a6381432f05298e7a66ed2fe22e7975b1502528a7ffffffff0200000000000000001f006a15e4b880e781afe883bde999a4e58d83e5b9b4e69a970635386135393733b30100000000001976a9149c63715c6d1fa6c61b31d2911516e1c3db3bdfa888ac00000000" {
-		t.Errorf("Failed to convert Bob tx to raw tx string %s %s", rawTx, err)
+	var tx *transaction.Transaction
+	if tx, err = bobTx.ToTx(); err != nil {
+		fmt.Printf("error occurred: %s", err.Error())
+		return
+	}
+
+	fmt.Printf("found tx: %s", tx.GetTxID())
+	// Output:found tx: 207eaadc096849e037b8944df21a8bba6d91d8445848db047c0a3f963121e19d
+}
+
+// BenchmarkTx_ToTx benchmarks the method ToTx()
+func BenchmarkTx_ToTx(b *testing.B) {
+	bobTx, _ := NewFromString(sampleBobTx)
+	for i := 0; i < b.N; i++ {
+		_, _ = bobTx.ToTx()
 	}
 }
 
-func TestToString(t *testing.T) {
-	rawTxString := "0100000001f15a9d3c550c14e12ca066ad09edff31432f1e9f45894ecff5b70c8354c81f3d010000006b483045022100f012c3bd3781091aa8e53cab2ffcb90acced8c65500b41086fd225e48c98c1d702200b8ff117b8ecd2b2d7e95551bc5a1b3bbcca8049864479a28bed9dc842a86804412103ef5bb22964d529c0af748d9a6381432f05298e7a66ed2fe22e7975b1502528a7ffffffff0200000000000000001f006a15e4b880e781afe883bde999a4e58d83e5b9b4e69a970635386135393733b30100000000001976a9149c63715c6d1fa6c61b31d2911516e1c3db3bdfa888ac00000000"
+// TestTx_ToRawTxString tests for nil case in ToRawTxString()
+func TestTx_ToRawTxString(t *testing.T) {
+	bobTx, err := NewFromString(sampleBobTx)
+	if err != nil {
+		t.Fatalf("Failed to create bob tx %s", err)
+	}
+
+	testTx := "0100000001f15a9d3c550c14e12ca066ad09edff31432f1e9f45894ecff5b70c8354c81f3d010000006b483045022100f012c3bd3781091aa8e53cab2ffcb90acced8c65500b41086fd225e48c98c1d702200b8ff117b8ecd2b2d7e95551bc5a1b3bbcca8049864479a28bed9dc842a86804412103ef5bb22964d529c0af748d9a6381432f05298e7a66ed2fe22e7975b1502528a7ffffffff0200000000000000001f006a15e4b880e781afe883bde999a4e58d83e5b9b4e69a970635386135393733b30100000000001976a9149c63715c6d1fa6c61b31d2911516e1c3db3bdfa888ac00000000"
+
+	var rawTx string
+	rawTx, err = bobTx.ToRawTxString()
+	if err != nil {
+		t.Fatalf("failed to convert Bob tx to raw tx string: %s", err)
+	} else if rawTx != testTx {
+		t.Fatalf("tx does not match: %s vs %s", rawTx, testTx)
+	}
+}
+
+// ExampleTx_ToRawTxString example using ToRawTxString()
+func ExampleTx_ToRawTxString() {
+	// Use an example TX
+	bobTx, err := NewFromString(sampleBobTx)
+	if err != nil {
+		fmt.Printf("error occurred: %s", err.Error())
+		return
+	}
+
+	var rawTx string
+	if rawTx, err = bobTx.ToRawTxString(); err != nil {
+		fmt.Printf("error occurred: %s", err.Error())
+		return
+	}
+
+	fmt.Printf("found raw tx: %s", rawTx)
+	// Output:found raw tx: 0100000001f15a9d3c550c14e12ca066ad09edff31432f1e9f45894ecff5b70c8354c81f3d010000006b483045022100f012c3bd3781091aa8e53cab2ffcb90acced8c65500b41086fd225e48c98c1d702200b8ff117b8ecd2b2d7e95551bc5a1b3bbcca8049864479a28bed9dc842a86804412103ef5bb22964d529c0af748d9a6381432f05298e7a66ed2fe22e7975b1502528a7ffffffff0200000000000000001f006a15e4b880e781afe883bde999a4e58d83e5b9b4e69a970635386135393733b30100000000001976a9149c63715c6d1fa6c61b31d2911516e1c3db3bdfa888ac00000000
+}
+
+// BenchmarkTx_ToRawTxString benchmarks the method ToRawTxString()
+func BenchmarkTx_ToRawTxString(b *testing.B) {
+	bobTx, _ := NewFromString(sampleBobTx)
+	for i := 0; i < b.N; i++ {
+		_, _ = bobTx.ToRawTxString()
+	}
+}
+
+// TestTx_ToString tests for nil case in ToString()
+func TestTx_ToString(t *testing.T) {
 
 	bobTx := new(Tx)
-	err := bobTx.FromRawTxString(rawTxString)
+	err := bobTx.FromRawTxString(rawBobTx)
 	if err != nil {
 		t.Errorf("Error %s", err)
 	}
 
 	// to string
-	txString, err := bobTx.ToString()
+	var txString string
+	txString, err = bobTx.ToString()
 	if err != nil {
 		t.Errorf("Error %s", err)
 	}
 
 	// make another bob tx from string
-	otherBob, err := NewFromString(txString)
+	var otherBob *Tx
+	otherBob, err = NewFromString(txString)
 	if err != nil {
 		t.Errorf("Failed to create bob tx %s", err)
 	}
@@ -462,5 +525,32 @@ func TestToString(t *testing.T) {
 	// check txid match
 	if bobTx.Tx.H != otherBob.Tx.H {
 		t.Errorf("TXIDS do not match!")
+	}
+}
+
+// ExampleTx_ToString example using ToString()
+func ExampleTx_ToString() {
+	// Use an example TX
+	bobTx, err := NewFromString(sampleBobTx)
+	if err != nil {
+		fmt.Printf("error occurred: %s", err.Error())
+		return
+	}
+
+	var rawTx string
+	if rawTx, err = bobTx.ToString(); err != nil {
+		fmt.Printf("error occurred: %s", err.Error())
+		return
+	}
+
+	fmt.Printf("found raw tx: %s", rawTx)
+	// Output:found raw tx: {"in":[{"e":{"a":"1FFuYLM8a66GddCG25nUbarazeMr5dnUwC","i":1,"h":"3d1fc854830cb7f5cf4e89459f1e2f4331ffed09ad66a02ce1140c553c9d5af1"},"tape":[{"cell":[{"h":"3045022100f012c3bd3781091aa8e53cab2ffcb90acced8c65500b41086fd225e48c98c1d702200b8ff117b8ecd2b2d7e95551bc5a1b3bbcca8049864479a28bed9dc842a8680441","b":"MEUCIQDwEsO9N4EJGqjlPKsv/LkKzO2MZVALQQhv0iXkjJjB1wIgC4/xF7js0rLX6VVRvFobO7zKgEmGRHmii+2dyEKoaARB","s":"0E\u0002!\u0000�\u0012ý7�\t\u001a��\u003c�/��\n��eP\u000bA\u0008o�%䌘��\u0002 \u000b��\u0017��Ҳ��UQ�Z\u001b;�ʀI�Dy����B�h\u0004A","i":0,"ii":0},{"h":"03ef5bb22964d529c0af748d9a6381432f05298e7a66ed2fe22e7975b1502528a7","b":"A+9bsilk1SnAr3SNmmOBQy8FKY56Zu0v4i55dbFQJSin","s":"\u0003�[�)d�)��t��c�C/\u0005)�zf�/�.yu�P%(�","i":1,"ii":1}],"i":0}],"seq":4294967295,"i":0}],"out":[{"i":0,"tape":[{"cell":[{"i":0,"ii":0,"ops":"OP_0"},{"i":1,"ii":1,"op":106,"ops":"OP_RETURN"}],"i":0},{"cell":[{"h":"e4b880e781afe883bde999a4e58d83e5b9b4e69a97","b":"5LiA54Gv6IO96Zmk5Y2D5bm05pqX","s":"一灯能除千年暗","i":0,"ii":2},{"h":"353861353937","b":"NThhNTk3","s":"58a597","i":1,"ii":3}],"i":1}],"e":{"a":"false","i":0}},{"i":1,"tape":[{"cell":[{"i":0,"ii":0,"op":118,"ops":"OP_DUP"},{"i":1,"ii":1,"op":169,"ops":"OP_HASH160"},{"h":"9c63715c6d1fa6c61b31d2911516e1c3db3bdfa8","b":"nGNxXG0fpsYbMdKRFRbhw9s736g=","s":"�cq\\m\u001f��\u001b1ґ\u0015\u0016���;ߨ","i":2,"ii":2},{"i":3,"ii":3,"op":136,"ops":"OP_EQUALVERIFY"},{"i":4,"ii":4,"op":172,"ops":"OP_CHECKSIG"}],"i":0}],"e":{"a":"1FFuYLM8a66GddCG25nUbarazeMr5dnUwC","v":111411,"i":1}}],"_id":"5ed082db57cd6b1658b88400","tx":{"h":"207eaadc096849e037b8944df21a8bba6d91d8445848db047c0a3f963121e19d"},"blk":{"i":635140},"lock":0}
+}
+
+// BenchmarkTx_ToString benchmarks the method ToString()
+func BenchmarkTx_ToString(b *testing.B) {
+	bobTx, _ := NewFromString(sampleBobTx)
+	for i := 0; i < b.N; i++ {
+		_, _ = bobTx.ToString()
 	}
 }
