@@ -1,3 +1,11 @@
+// Package bob is a library for working with BOB formatted transactions
+//
+// Specs: https://bob.planaria.network/
+//
+// If you have any suggestions or comments, please feel free to open an issue on
+// this GitHub repository!
+//
+// By BitcoinSchema Organization (https://bitcoinschema.org)
 package bob
 
 import (
@@ -166,11 +174,11 @@ func (t *Tx) FromBytes(line []byte) error {
 			},
 		})
 	}
-	t.In = tu.In
 	t.Blk = tu.Blk
 	t.ID = tu.ID
-	t.Out = fixedOuts
+	t.In = tu.In
 	t.Lock = tu.Lock
+	t.Out = fixedOuts
 	t.Tx = tu.Tx
 
 	// Check for missing hex values and supply them
@@ -179,7 +187,10 @@ func (t *Tx) FromBytes(line []byte) error {
 			for cellIdx, cell := range tape.Cell {
 				if len(cell.H) == 0 && len(cell.B) > 0 {
 					// base 64 decode cell.B and encode it to hex string
-					cellBytes, _ := base64.StdEncoding.DecodeString(cell.B)
+					cellBytes, err := base64.StdEncoding.DecodeString(cell.B)
+					if err != nil {
+						return err
+					}
 					t.Out[outIdx].Tape[tapeIdx].Cell[cellIdx].H = hex.EncodeToString(cellBytes)
 				}
 			}
@@ -190,7 +201,10 @@ func (t *Tx) FromBytes(line []byte) error {
 			for cellIdx, cell := range tape.Cell {
 				if len(cell.H) == 0 && len(cell.B) > 0 {
 					// base 64 decode cell.B and encode it to hex string
-					cellBytes, _ := base64.StdEncoding.DecodeString(cell.B)
+					cellBytes, err := base64.StdEncoding.DecodeString(cell.B)
+					if err != nil {
+						return err
+					}
 					t.In[inIdx].Tape[tapeIdx].Cell[cellIdx].H = hex.EncodeToString(cellBytes)
 				}
 			}
@@ -257,7 +271,10 @@ func (t *Tx) FromTx(tx *transaction.Transaction) error {
 		}
 
 		// Initialize out tapes and locking script asm
-		asm, _ := o.LockingScript.ToASM()
+		asm, err := o.LockingScript.ToASM()
+		if err != nil {
+			return err
+		}
 		pushDatas := strings.Split(asm, " ")
 
 		var outTapes []Tape
@@ -273,6 +290,8 @@ func (t *Tx) FromTx(tx *transaction.Transaction) error {
 		if len(pushDatas) > 0 {
 
 			for pdIdx, pushData := range pushDatas {
+
+				// Ignore error if it fails, use empty
 				pushDataBytes, _ := hex.DecodeString(pushData)
 				b64String := base64.StdEncoding.EncodeToString(pushDataBytes)
 
@@ -316,9 +335,7 @@ func (t *Tx) ToRawTxString() (string, error) {
 // ToString returns a json string of bobTx
 func (t *Tx) ToString() (string, error) {
 	// Create JSON from the instance data.
-	// ... Ignore errors.
 	b, err := json.Marshal(t)
-	// Convert bytes to string.
 	return string(b), err
 
 }
