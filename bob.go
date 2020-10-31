@@ -94,6 +94,7 @@ type Output struct {
 // Blk contains the block info
 type Blk struct {
 	I uint32 `json:"i"`
+	T uint32 `jsong:"t"`
 }
 
 // TxInfo contains the transaction info
