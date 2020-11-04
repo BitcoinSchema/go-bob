@@ -22,8 +22,14 @@ import (
 	"github.com/libsv/libsv/transaction/output"
 )
 
-// OP_SWAP is 0x7c which is what "|" will be detected as
-const asmProtocolDelimiter = "OP_SAWP"
+// Protocol delimiter constants
+// OP_SWAP = 0x7c = 124 = "|"
+const (
+	ProtocolDelimiterAsm  = "OP_SAWP"
+	ProtocolDelimiterInt  = 0x7c
+	ProtocolDelimiterByte = byte(ProtocolDelimiterInt)
+	ProtocolDelimiter     = string(ProtocolDelimiterInt)
+)
 
 // TxUnmarshal is a BOB formatted Bitcoin transaction that includes
 // interfaces where types may change
@@ -296,7 +302,7 @@ func (t *Tx) FromTx(tx *transaction.Transaction) error {
 				pushDataBytes, _ := hex.DecodeString(pushData)
 				b64String := base64.StdEncoding.EncodeToString(pushDataBytes)
 
-				if pushData != asmProtocolDelimiter {
+				if pushData != ProtocolDelimiterAsm {
 					currentTape.Cell = append(currentTape.Cell, Cell{
 						B:  b64String,
 						H:  pushData,
@@ -307,7 +313,7 @@ func (t *Tx) FromTx(tx *transaction.Transaction) error {
 				}
 				// Note: OP_SWAP is 0x7c which is also ascii "|" which is our protocol separator.
 				// This is not used as OP_SWAP at all since this is in the script after the OP_FALSE
-				if "OP_RETURN" == pushData || asmProtocolDelimiter == pushData {
+				if "OP_RETURN" == pushData || ProtocolDelimiterAsm == pushData {
 					outTapes = append(outTapes, currentTape)
 					currentTape = Tape{}
 				}
@@ -387,7 +393,7 @@ func (t *Tx) ToTx() (*transaction.Transaction, error) {
 			for cellIdx, cell := range tape.Cell {
 				if cellIdx == 0 && tapeIdx > 1 {
 					// add the separator back in
-					lockScriptAsm = append(lockScriptAsm, asmProtocolDelimiter)
+					lockScriptAsm = append(lockScriptAsm, ProtocolDelimiterAsm)
 				}
 
 				if len(cell.H) > 0 {
