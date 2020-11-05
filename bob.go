@@ -28,7 +28,7 @@ const (
 	ProtocolDelimiterAsm  = "OP_SAWP"
 	ProtocolDelimiterInt  = 0x7c
 	ProtocolDelimiterByte = byte(ProtocolDelimiterInt)
-	ProtocolDelimiter     = string(ProtocolDelimiterInt)
+	ProtocolDelimiter     = string(rune(ProtocolDelimiterInt))
 )
 
 // TxUnmarshal is a BOB formatted Bitcoin transaction that includes
