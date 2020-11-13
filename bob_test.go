@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/bitcoinschema/go-bitcoin"
-	"github.com/libsv/libsv/transaction"
+	"github.com/libsv/go-bt"
 )
 
 // TestNewFromBytes tests for nil case in NewFromBytes()
@@ -288,7 +288,7 @@ func BenchmarkNewFromRawTxString(b *testing.B) {
 	}
 }
 
-func testExampleTx() (*transaction.Transaction, error) {
+func testExampleTx() (*bt.Tx, error) {
 	pk := "80699541455b59a8a8a33b85892319de8b8e8944eb8b48e9467137825ae192e59f01"
 
 	privateKey, err := bitcoin.PrivateKeyFromString(pk)
@@ -313,14 +313,14 @@ func TestNewFromTx(t *testing.T) {
 	var (
 		// Testing private methods
 		tests = []struct {
-			inputTx          *transaction.Transaction
+			inputTx          *bt.Tx
 			expectedTxString string
 			expectedTxHash   string
 			expectedNil      bool
 			expectedError    bool
 		}{
 			{
-				&transaction.Transaction{},
+				&bt.Tx{},
 				"01000000000000000000",
 				"f702453dd03b0f055e5437d76128141803984fb10acb85fc3b2184fae2f3fa78",
 				false,
@@ -417,7 +417,7 @@ func TestTx_ToTx(t *testing.T) {
 		t.Errorf("Failed to create bob tx %s", err)
 	}
 
-	var tx *transaction.Transaction
+	var tx *bt.Tx
 	if tx, err = bobTx.ToTx(); err != nil {
 		t.Errorf("Failed to create tx %s", err)
 	}
@@ -436,7 +436,7 @@ func ExampleTx_ToTx() {
 		return
 	}
 
-	var tx *transaction.Transaction
+	var tx *bt.Tx
 	if tx, err = bobTx.ToTx(); err != nil {
 		fmt.Printf("error occurred: %s", err.Error())
 		return

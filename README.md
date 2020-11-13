@@ -54,7 +54,7 @@ View the generated [documentation](https://pkg.go.dev/github.com/bitcoinschema/g
 
 
 - [bitcoinschema/go-bitcoin](https://github.com/bitcoinschema/go-bitcoin)
-- [libsv/libsv](https://github.com/libsv/libsv)
+- [libsv/go-bt](https://github.com/libsv/go-bt)
 </details>
 
 <details>
@@ -170,7 +170,7 @@ type Tx struct {
 bobTx, err = NewFromBytes(tx)
 ```
 
-**BOB from [libsv.transaction](https://github.com/libsv/libsv)**
+**BOB from [bt.Tx](https://github.com/libsv/go-bt)**
 ```go
 bobTx, err = NewFromTx(line)
 ```

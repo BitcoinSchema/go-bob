@@ -15,11 +15,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/libsv/libsv/script"
-	"github.com/libsv/libsv/script/address"
-	"github.com/libsv/libsv/transaction"
-	"github.com/libsv/libsv/transaction/input"
-	"github.com/libsv/libsv/transaction/output"
+	"github.com/libsv/go-bt"
+	"github.com/libsv/go-bt/bscript"
 )
 
 // Protocol delimiter constants
@@ -108,7 +105,7 @@ type Output struct {
 // Blk contains the block info
 type Blk struct {
 	I uint32 `json:"i"`
-	T uint32 `jsong:"t"`
+	T uint32 `json:"t"`
 }
 
 // TxInfo contains the transaction info
@@ -152,7 +149,7 @@ func NewFromString(line string) (bobTx *Tx, err error) {
 }
 
 // NewFromTx creates a new BobTx from a libsv Transaction
-func NewFromTx(tx *transaction.Transaction) (bobTx *Tx, err error) {
+func NewFromTx(tx *bt.Tx) (bobTx *Tx, err error) {
 	bobTx = new(Tx)
 	err = bobTx.FromTx(tx)
 	return
@@ -223,7 +220,7 @@ func (t *Tx) FromBytes(line []byte) error {
 
 // FromRawTxString takes a hex encoded tx string
 func (t *Tx) FromRawTxString(rawTxString string) error {
-	tx, err := transaction.NewFromString(rawTxString)
+	tx, err := bt.NewTxFromString(rawTxString)
 	if err != nil {
 		return err
 	}
@@ -236,8 +233,8 @@ func (t *Tx) FromString(line string) (err error) {
 	return
 }
 
-// FromTx takes a libsv.Transaction
-func (t *Tx) FromTx(tx *transaction.Transaction) error {
+// FromTx takes a bt.Tx
+func (t *Tx) FromTx(tx *bt.Tx) error {
 
 	// Set the transaction ID
 	t.Tx.H = tx.GetTxID()
@@ -270,7 +267,7 @@ func (t *Tx) FromTx(tx *transaction.Transaction) error {
 		// Try to get a pub_key hash (ignore fail when this is not a locking script)
 		outPubKeyHash, _ := o.LockingScript.GetPublicKeyHash()
 		if len(outPubKeyHash) > 0 {
-			outAddress, err := address.NewFromPublicKeyHash(outPubKeyHash, true)
+			outAddress, err := bscript.NewAddressFromPublicKeyHash(outPubKeyHash, true)
 			if err != nil {
 				return fmt.Errorf("failed to get address from pubkeyhash %x: %w", outPubKeyHash, err)
 			}
@@ -347,9 +344,9 @@ func (t *Tx) ToString() (string, error) {
 
 }
 
-// ToTx returns a transaction.Transaction
-func (t *Tx) ToTx() (*transaction.Transaction, error) {
-	tx := transaction.New()
+// ToTx returns a bt.Tx
+func (t *Tx) ToTx() (*bt.Tx, error) {
+	tx := bt.NewTx()
 
 	tx.Locktime = t.Lock
 
@@ -359,7 +356,7 @@ func (t *Tx) ToTx() (*transaction.Transaction, error) {
 			return nil, fmt.Errorf("failed to process inputs. More tapes or cells than expected. %+v", in.Tape)
 		}
 
-		prevTxScript, _ := script.NewP2PKHFromAddress(in.E.A)
+		prevTxScript, _ := bscript.NewP2PKHFromAddress(in.E.A)
 
 		var scriptAsm []string
 		for _, cell := range in.Tape[0].Cell {
@@ -367,13 +364,13 @@ func (t *Tx) ToTx() (*transaction.Transaction, error) {
 			scriptAsm = append(scriptAsm, cellData)
 		}
 
-		builtUnlockScript, err := script.NewFromASM(strings.Join(scriptAsm, " "))
+		builtUnlockScript, err := bscript.NewFromASM(strings.Join(scriptAsm, " "))
 		if err != nil {
 			return nil, fmt.Errorf("failed to get script from asm: %v error: %w", scriptAsm, err)
 		}
 
 		// add inputs
-		i := &input.Input{
+		i := &bt.Input{
 			PreviousTxID:       in.E.H,
 			PreviousTxOutIndex: in.E.I,
 			PreviousTxSatoshis: in.E.V,
@@ -404,8 +401,8 @@ func (t *Tx) ToTx() (*transaction.Transaction, error) {
 			}
 		}
 
-		lockingScript, _ := script.NewFromASM(strings.Join(lockScriptAsm, " "))
-		o := &output.Output{
+		lockingScript, _ := bscript.NewFromASM(strings.Join(lockScriptAsm, " "))
+		o := &bt.Output{
 			Satoshis:      out.E.V,
 			LockingScript: lockingScript,
 		}
