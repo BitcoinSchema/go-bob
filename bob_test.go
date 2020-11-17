@@ -6,6 +6,7 @@ import (
 
 	"github.com/bitcoinschema/go-bitcoin"
 	"github.com/libsv/go-bt"
+	"github.com/stretchr/testify/assert"
 )
 
 // TestNewFromBytes tests for nil case in NewFromBytes()
@@ -62,16 +63,9 @@ func TestNewFromBytes(t *testing.T) {
 
 			var str string
 			str, err = b.ToRawTxString()
-			if err != nil {
-				t.Errorf("%s Failed: [%v] inputted and error occurred: %s", t.Name(), test.inputLine, err.Error())
-			}
-			if str != test.expectedTxString {
-				t.Errorf("%s Failed: [%v] inputted and expected [%s] but got [%s]", t.Name(), test.inputLine, test.expectedTxString, str)
-			}
-			if b.Tx.H != test.expectedTxHash {
-				t.Errorf("%s Failed: [%v] inputted and expected [%s] but got [%s]", t.Name(), test.inputLine, test.expectedTxHash, b.Tx.H)
-			}
-
+			assert.NoError(t, err)
+			assert.Equal(t, test.expectedTxString, str)
+			assert.Equal(t, test.expectedTxHash, b.Tx.H)
 		}
 	}
 }
@@ -99,18 +93,12 @@ func BenchmarkNewFromBytes(b *testing.B) {
 func TestNewFromBytesPanic(t *testing.T) {
 	t.Parallel()
 
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("the code did not panic")
-		}
-	}()
-
-	b, err := NewFromBytes([]byte(sampleBobTxBadStrings))
-	if err != nil {
-		t.Fatalf("error should not occur")
-	} else if b != nil {
+	assert.Panics(t, func() {
+		b, err := NewFromBytes([]byte(sampleBobTxBadStrings))
+		assert.NoError(t, err)
+		assert.NotNil(t, b)
 		_, _ = b.ToRawTxString()
-	}
+	})
 }
 
 // TestNewFromString tests for nil case in NewFromString()
@@ -166,15 +154,9 @@ func TestNewFromString(t *testing.T) {
 
 			var str string
 			str, err = b.ToRawTxString()
-			if err != nil {
-				t.Errorf("%s Failed: [%v] inputted and error occurred: %s", t.Name(), test.inputLine, err.Error())
-			}
-			if str != test.expectedTxString {
-				t.Errorf("%s Failed: [%v] inputted and expected [%s] but got [%s]", t.Name(), test.inputLine, test.expectedTxString, str)
-			}
-			if b.Tx.H != test.expectedTxHash {
-				t.Errorf("%s Failed: [%v] inputted and expected [%s] but got [%s]", t.Name(), test.inputLine, test.expectedTxHash, b.Tx.H)
-			}
+			assert.NoError(t, err)
+			assert.Equal(t, test.expectedTxString, str)
+			assert.Equal(t, test.expectedTxHash, b.Tx.H)
 		}
 	}
 }
@@ -257,15 +239,9 @@ func TestNewFromRawTxString(t *testing.T) {
 
 			var str string
 			str, err = b.ToRawTxString()
-			if err != nil {
-				t.Errorf("%s Failed: [%v] inputted and error occurred: %s", t.Name(), test.inputLine, err.Error())
-			}
-			if str != test.expectedTxString {
-				t.Errorf("%s Failed: [%v] inputted and expected [%s] but got expectedTxString [%s]", t.Name(), test.inputLine, test.expectedTxString, str)
-			}
-			if b.Tx.H != test.expectedTxHash {
-				t.Errorf("%s Failed: [%v] inputted and expected [%s] but got expectedTxHash [%s]", t.Name(), test.inputLine, test.expectedTxHash, b.Tx.H)
-			}
+			assert.NoError(t, err)
+			assert.Equal(t, test.expectedTxString, str)
+			assert.Equal(t, test.expectedTxHash, b.Tx.H)
 		}
 	}
 }
@@ -306,9 +282,8 @@ func TestNewFromTx(t *testing.T) {
 	t.Parallel()
 
 	validTx, exampleErr := testExampleTx()
-	if exampleErr != nil {
-		t.Fatalf("error occurred: %s", exampleErr.Error())
-	}
+	assert.NoError(t, exampleErr)
+	assert.NotNil(t, validTx)
 
 	var (
 		// Testing private methods
@@ -352,15 +327,9 @@ func TestNewFromTx(t *testing.T) {
 
 			var str string
 			str, err = b.ToRawTxString()
-			if err != nil {
-				t.Errorf("%s Failed: [%v] inputted and error occurred: %s", t.Name(), test.inputTx, err.Error())
-			}
-			if str != test.expectedTxString {
-				t.Errorf("%s Failed: [%v] inputted and expected [%s] but got expectedTxString [%s]", t.Name(), test.inputTx, test.expectedTxString, str)
-			}
-			if b.Tx.H != test.expectedTxHash {
-				t.Errorf("%s Failed: [%v] inputted and expected [%s] but got expectedTxHash [%s]", t.Name(), test.inputTx, test.expectedTxHash, b.Tx.H)
-			}
+			assert.NoError(t, err)
+			assert.Equal(t, test.expectedTxString, str)
+			assert.Equal(t, test.expectedTxHash, b.Tx.H)
 		}
 	}
 }
@@ -395,36 +364,26 @@ func BenchmarkNewFromTx(b *testing.B) {
 func TestNewFromTxPanic(t *testing.T) {
 	t.Parallel()
 
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("the code did not panic")
-		}
-	}()
-
-	b, err := NewFromTx(nil)
-	if err != nil {
-		t.Fatalf("error should not occur")
-	} else if b != nil {
+	assert.Panics(t, func() {
+		b, err := NewFromTx(nil)
+		assert.NoError(t, err)
+		assert.NotNil(t, b)
 		_, _ = b.ToRawTxString()
-	}
+	})
 }
 
 // TestTx_ToTx tests for nil case in ToTx()
 func TestTx_ToTx(t *testing.T) {
 
 	bobTx, err := NewFromString(sampleBobTx)
-	if err != nil {
-		t.Errorf("Failed to create bob tx %s", err)
-	}
+	assert.NoError(t, err)
+	assert.NotNil(t, bobTx)
 
 	var tx *bt.Tx
-	if tx, err = bobTx.ToTx(); err != nil {
-		t.Errorf("Failed to create tx %s", err)
-	}
-
-	if tx.GetTxID() != bobTx.Tx.H {
-		t.Errorf("Unexpected tx result %s %s %s", tx.ToString(), bobTx.Tx.H, tx.GetTxID())
-	}
+	tx, err = bobTx.ToTx()
+	assert.NoError(t, err)
+	assert.NotNil(t, tx)
+	assert.Equal(t, bobTx.Tx.H, tx.GetTxID())
 }
 
 // ExampleTx_ToTx example using ToTx()
@@ -457,19 +416,15 @@ func BenchmarkTx_ToTx(b *testing.B) {
 // TestTx_ToRawTxString tests for nil case in ToRawTxString()
 func TestTx_ToRawTxString(t *testing.T) {
 	bobTx, err := NewFromString(sampleBobTx)
-	if err != nil {
-		t.Fatalf("Failed to create bob tx %s", err)
-	}
+	assert.NoError(t, err)
+	assert.NotNil(t, bobTx)
 
 	testTx := "0100000001f15a9d3c550c14e12ca066ad09edff31432f1e9f45894ecff5b70c8354c81f3d010000006b483045022100f012c3bd3781091aa8e53cab2ffcb90acced8c65500b41086fd225e48c98c1d702200b8ff117b8ecd2b2d7e95551bc5a1b3bbcca8049864479a28bed9dc842a86804412103ef5bb22964d529c0af748d9a6381432f05298e7a66ed2fe22e7975b1502528a7ffffffff0200000000000000001f006a15e4b880e781afe883bde999a4e58d83e5b9b4e69a970635386135393733b30100000000001976a9149c63715c6d1fa6c61b31d2911516e1c3db3bdfa888ac00000000"
 
 	var rawTx string
 	rawTx, err = bobTx.ToRawTxString()
-	if err != nil {
-		t.Fatalf("failed to convert Bob tx to raw tx string: %s", err)
-	} else if rawTx != testTx {
-		t.Fatalf("tx does not match: %s vs %s", rawTx, testTx)
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, testTx, rawTx)
 }
 
 // ExampleTx_ToRawTxString example using ToRawTxString()
@@ -504,28 +459,20 @@ func TestTx_ToString(t *testing.T) {
 
 	bobTx := new(Tx)
 	err := bobTx.FromRawTxString(rawBobTx)
-	if err != nil {
-		t.Errorf("Error %s", err)
-	}
+	assert.NoError(t, err)
 
 	// to string
 	var txString string
 	txString, err = bobTx.ToString()
-	if err != nil {
-		t.Errorf("Error %s", err)
-	}
+	assert.NoError(t, err)
 
 	// make another bob tx from string
 	var otherBob *Tx
 	otherBob, err = NewFromString(txString)
-	if err != nil {
-		t.Errorf("Failed to create bob tx %s", err)
-	}
+	assert.NoError(t, err)
 
 	// check txid match
-	if bobTx.Tx.H != otherBob.Tx.H {
-		t.Errorf("TXIDS do not match!")
-	}
+	assert.Equal(t, bobTx.Tx.H, otherBob.Tx.H)
 }
 
 // ExampleTx_ToString example using ToString()

@@ -348,7 +348,7 @@ func (t *Tx) ToString() (string, error) {
 func (t *Tx) ToTx() (*bt.Tx, error) {
 	tx := bt.NewTx()
 
-	tx.Locktime = t.Lock
+	tx.LockTime = t.Lock
 
 	for _, in := range t.In {
 
