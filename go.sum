@@ -1,5 +1,5 @@
-github.com/bitcoinschema/go-bitcoin v0.3.14 h1:W+XkVAEzBwpe9d/jTourCZp4220DDgSfMUsXcsflKes=
-github.com/bitcoinschema/go-bitcoin v0.3.14/go.mod h1:CjdACi0pqDv2DeUD0k3UZEQ+cRJqBExdqeayckCsNAo=
+github.com/bitcoinschema/go-bitcoin v0.3.15 h1:cErIRhajogY4kPOnFGVpTgO6ZsJf6pGRGnHUoHBkfsM=
+github.com/bitcoinschema/go-bitcoin v0.3.15/go.mod h1:FGL7sCs0wWOiX9f3kcEDGd2eemj38WsixMFG6DnLfzk=
 github.com/bitcoinsv/bsvd v0.0.0-20190609155523-4c29707f7173 h1:2yTIV9u7H0BhRDGXH5xrAwAz7XibWJtX2dNezMeNsUo=
 github.com/bitcoinsv/bsvd v0.0.0-20190609155523-4c29707f7173/go.mod h1:BZ1UcC9+tmcDEcdVXgpt13hMczwJxWzpAn68wNs7zRA=
 github.com/bitcoinsv/bsvlog v0.0.0-20181216181007-cb81b076bf2e h1:6f+gRvaPE/4h0g39dqTNPr9/P4mikw0aB+dhiExaWN8=
@@ -9,7 +9,6 @@ github.com/bitcoinsv/bsvutil v0.0.0-20181216182056-1d77cf353ea9/go.mod h1:p44KuN
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/libsv/go-bt v0.0.9/go.mod h1:AfXoLFYEbY/TvCq/84xTce2xGjPUuC5imokHmcykF2k=
 github.com/libsv/go-bt v0.0.10 h1:b2AUXhrMfLRvYm+77CHo3AO+p22+fpNfZMaU6tsrKuM=
 github.com/libsv/go-bt v0.0.10/go.mod h1:AfXoLFYEbY/TvCq/84xTce2xGjPUuC5imokHmcykF2k=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
