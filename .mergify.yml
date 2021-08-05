@@ -143,6 +143,7 @@ pull_request_rules:
       - and:
         - author!=dependabot
         - author!=mrz1836
+        - author!=rohenaz
     actions:
       comment:
         message: |
