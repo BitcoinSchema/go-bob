@@ -15,8 +15,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/libsv/go-bt"
-	"github.com/libsv/go-bt/bscript"
+	"github.com/libsv/go-bt/v2"
+	"github.com/libsv/go-bt/v2/bscript"
 )
 
 // Protocol delimiter constants
@@ -164,7 +164,7 @@ func (t *Tx) FromBytes(line []byte) error {
 
 	// The out.E.A field can be either a boolean or a string
 	// So we need to unmarshal into an interface, and fix the normal struct the user
-	// of this lib will work with (so they don't have to format the interface themselves)
+	// of this lib will work with (so they dont have to format the interface themselves)
 	fixedOuts := make([]Output, 0)
 	for _, out := range tu.Out {
 		fixedOuts = append(fixedOuts, Output{
@@ -237,7 +237,7 @@ func (t *Tx) FromString(line string) (err error) {
 func (t *Tx) FromTx(tx *bt.Tx) error {
 
 	// Set the transaction ID
-	t.Tx.H = tx.GetTxID()
+	t.Tx.H = tx.TxID()
 
 	// Set the inputs
 	for inIdx, i := range tx.Inputs {
@@ -246,14 +246,14 @@ func (t *Tx) FromTx(tx *bt.Tx) error {
 			I: uint8(inIdx),
 			Tape: []Tape{{
 				Cell: []Cell{{
-					H: hex.EncodeToString(i.ToBytes(false)),
-					B: base64.RawStdEncoding.EncodeToString(i.ToBytes(false)),
+					H: hex.EncodeToString(i.Bytes(false)),
+					B: base64.RawStdEncoding.EncodeToString(i.Bytes(false)),
 					S: i.String(),
 				}},
 				I: 0,
 			}},
 			E: E{
-				H: i.PreviousTxID,
+				H: hex.EncodeToString(i.PreviousTxID()),
 			},
 		}
 
@@ -265,7 +265,7 @@ func (t *Tx) FromTx(tx *bt.Tx) error {
 		var adr string
 
 		// Try to get a pub_key hash (ignore fail when this is not a locking script)
-		outPubKeyHash, _ := o.LockingScript.GetPublicKeyHash()
+		outPubKeyHash, _ := o.LockingScript.PublicKeyHash()
 		if len(outPubKeyHash) > 0 {
 			outAddress, err := bscript.NewAddressFromPublicKeyHash(outPubKeyHash, true)
 			if err != nil {
@@ -279,6 +279,7 @@ func (t *Tx) FromTx(tx *bt.Tx) error {
 		if err != nil {
 			return err
 		}
+
 		pushDatas := strings.Split(asm, " ")
 
 		var outTapes []Tape
@@ -333,7 +334,7 @@ func (t *Tx) ToRawTxString() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return tx.ToString(), nil
+	return tx.String(), nil
 }
 
 // ToString returns a json string of bobTx
@@ -371,7 +372,6 @@ func (t *Tx) ToTx() (*bt.Tx, error) {
 
 		// add inputs
 		i := &bt.Input{
-			PreviousTxID:       in.E.H,
 			PreviousTxOutIndex: in.E.I,
 			PreviousTxSatoshis: in.E.V,
 			PreviousTxScript:   prevTxScript,
@@ -379,7 +379,8 @@ func (t *Tx) ToTx() (*bt.Tx, error) {
 			SequenceNumber:     in.Seq,
 		}
 
-		tx.AddInput(i)
+		i.PreviousTxIDAddStr(in.E.H)
+		tx.Inputs = append(tx.Inputs, i) //AddInput(i)
 	}
 
 	// add outputs
