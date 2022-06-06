@@ -164,7 +164,7 @@ func (t *Tx) FromBytes(line []byte) error {
 
 	// The out.E.A field can be either a boolean or a string
 	// So we need to unmarshal into an interface, and fix the normal struct the user
-	// of this lib will work with (so they dont have to format the interface themselves)
+	// of this lib will work with (so they don't have to format the interface themselves)
 	fixedOuts := make([]Output, 0)
 	for _, out := range tu.Out {
 		fixedOuts = append(fixedOuts, Output{
@@ -379,8 +379,8 @@ func (t *Tx) ToTx() (*bt.Tx, error) {
 			SequenceNumber:     in.Seq,
 		}
 
-		i.PreviousTxIDAddStr(in.E.H)
-		tx.Inputs = append(tx.Inputs, i) //AddInput(i)
+		_ = i.PreviousTxIDAddStr(in.E.H)
+		tx.Inputs = append(tx.Inputs, i) // AddInput(i)
 	}
 
 	// add outputs
