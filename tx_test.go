@@ -25,7 +25,7 @@ const sampleBobTxBadStrings = `{ "_id": "5f08ddeed1352a2c3432f4db", "tx": { "h":
 "b": "BED/sziEj3i/u3i5tKgsIx3HKM7vQrNBJQyEupnPRYvyrwCV31Rb7z0o5xfNvwEQKhxyXGla3+QHSGGVGFdN8ig=", "i": 1, "ii": 1 } ], "i": 0 } ],
 "e": { "h": "744a55a8637aa191aa058630da51803abbeadc2de3d65b4acace1f5f10789c5b", "i": 1, "a": "1LC16EQVsqVYGeYTCrjvNf8j28zr4DwBuk" } } ], 
 "out": [ { "i": 0, "tape": [ { "cell": [ { "op": 0, "ops": "OP_0", "i": 0, "ii": 0 }, { "op": 106, "ops": "OP_RETURN", "i": 1, "ii": 1 } ], "i": 0 }, 
-{ "cell": [ { "s": "1BAPSuaPnfGnSBM3GLV9yhxUdYe4vGbdMT", "h": "31424150537561506e66476e53424d33474c56397968785564596534764762644d54", 
+{ "cell": [ { "s": "1BAPSuaPnfGnSBM3GLV9yhxUdYe4vGbdMT", "h": "s31424150537561506e66476e53424d33474c56397968785564596534764762644d54", 
 "b": "MUJBUFN1YVBuZkduU0JNM0dMVjl5aHhVZFllNHZHYmRNVA==", "i": 0, "ii": 2 }, { "s": "ATTEST", "h": "415454455354", "b": "QVRURVNU", "i": 1, "ii": 3 }, 
 { "s": "16ca90ce3c6347132adba40aa0d5faa3b2bf2015678ffc63db1511b676885e25", 
 "h": "31366361393063653363363334373133326164626134306161306435666161336232626632303135363738666663363364623135313162363736383835653235", 

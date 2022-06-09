@@ -22,7 +22,7 @@ import (
 // Protocol delimiter constants
 // OP_SWAP = 0x7c = 124 = "|"
 const (
-	ProtocolDelimiterAsm  = "OP_SAWP"
+	ProtocolDelimiterAsm  = "OP_SWAP"
 	ProtocolDelimiterInt  = 0x7c
 	ProtocolDelimiterByte = byte(ProtocolDelimiterInt)
 	ProtocolDelimiter     = string(rune(ProtocolDelimiterInt))
