@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/bitcoinschema/go-bitcoin/v2 v2.0.0-alpha.3
-	github.com/libsv/go-bt/v2 v2.1.0-beta.3
+	github.com/libsv/go-bt/v2 v2.1.0-beta.4
 	github.com/stretchr/testify v1.7.2
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 )
