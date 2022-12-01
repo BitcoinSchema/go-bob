@@ -32,7 +32,6 @@ const (
 // interfaces where types may change
 //
 // DO NOT CHANGE ORDER - aligned for memory optimization (malign)
-//
 type TxUnmarshal struct {
 	In   []Input           `json:"in"`
 	Out  []OutputUnmarshal `json:"out"`
@@ -81,7 +80,6 @@ type Cell struct {
 // Input is a transaction input
 //
 // DO NOT CHANGE ORDER - aligned for memory optimization (malign)
-//
 type Input struct {
 	E    E      `json:"e" bson:"e"`
 	Tape []Tape `json:"tape" bson:"tape"`
@@ -116,7 +114,6 @@ type TxInfo struct {
 // Tx is a BOB formatted Bitcoin transaction
 //
 // DO NOT CHANGE ORDER - aligned for memory optimization (malign)
-//
 type Tx struct {
 	In   []Input  `json:"in"`
 	Out  []Output `json:"out"`
