@@ -3,7 +3,7 @@
 > Go library for working with [BOB](https://bob.planaria.network/) formatted transactions
 
 [![Release](https://img.shields.io/github/release-pre/BitcoinSchema/go-bob.svg?logo=github&style=flat&v=3)](https://github.com/BitcoinSchema/go-bob/releases)
-[![Build Status](https://img.shields.io/github/workflow/status/BitcoinSchema/go-bob/run-go-tests?logo=github&v=3)](https://github.com/BitcoinSchema/go-bob/actions)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/BitcoinSchema/go-bob/run-tests.yml?branch=master&logo=github&v=3)](https://github.com/BitcoinSchema/go-bob/actions)
 [![Report](https://goreportcard.com/badge/github.com/BitcoinSchema/go-bob?style=flat&v=3)](https://goreportcard.com/report/github.com/BitcoinSchema/go-bob)
 [![codecov](https://codecov.io/gh/BitcoinSchema/go-bob/branch/master/graph/badge.svg?v=3)](https://codecov.io/gh/BitcoinSchema/go-bob)
 [![Go](https://img.shields.io/github/go-mod/go-version/BitcoinSchema/go-bob?v=3)](https://golang.org/)
