@@ -5,9 +5,18 @@ import (
 	"testing"
 
 	"github.com/bitcoinschema/go-bitcoin/v2"
+	"github.com/bitcoinschema/go-bob/test"
 	"github.com/libsv/go-bt/v2"
 	"github.com/stretchr/testify/assert"
 )
+
+var sampleBobTx, sampleBobTxBadStrings, rawBobTx string
+
+func init() {
+	sampleBobTx = test.GetTestHex("./test/bob/207eaadc096849e037b8944df21a8bba6d91d8445848db047c0a3f963121e19d.json")
+	sampleBobTxBadStrings = test.GetTestHex("./test/bob/26b754e6fdf04121b8d91160a0b252a22ae30204fc552605b7f6d3f08419f29e.json")
+	rawBobTx = test.GetTestHex("./test/tx/2.hex")
+}
 
 // TestNewFromBytes tests for nil case in NewFromBytes()
 func TestNewFromBytes(t *testing.T) {
@@ -354,6 +363,23 @@ func TestNewFromTx(t *testing.T) {
 			assert.Equal(t, test.expectedTxHash, b.Tx.H)
 		}
 	}
+}
+
+func TestNewFromTxString(t *testing.T) {
+	// BAP attestation
+	testHex := test.GetTestHex("./test/tx/98a5f6ef18eaea188bdfdc048f89a48af82627a15a76fd53584975f28ab3cc39.hex")
+	bobTxFromString, err := NewFromRawTxString(testHex)
+	if err != nil {
+		t.Fatalf("error occurred1: %s", err.Error())
+	}
+
+	bapOut := &bobTxFromString.Out[0].Tape[1]
+	const bapPrefix = "1BAPSuaPnfGnSBM3GLV9yhxUdYe4vGbdMT"
+
+	if bapOut.Cell[0].S != bapPrefix {
+		t.Errorf("Expected string(%s) is not same as actual string (%s)", bapPrefix, bapOut.Cell[0].S)
+	}
+
 }
 
 // ExampleNewFromTx example using NewFromTx()
