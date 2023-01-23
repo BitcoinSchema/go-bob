@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/bitcoinschema/go-bitcoin/v2"
-	"github.com/bitcoinschema/go-bob/test"
+	test "github.com/bitcoinschema/go-bob/testing"
 	"github.com/libsv/go-bt/v2"
 	"github.com/stretchr/testify/assert"
 )
@@ -272,7 +272,7 @@ func TestMapFromRawTxString2(t *testing.T) {
 
 	if err != nil {
 		t.Fatalf("error occurred: %s", err)
-	} else if *bob.Out[3].Tape[2].Cell[5].S != "offer_click" {
+	} else if *bob.Out[3].Tape[1].Cell[5].S != "offer_click" {
 		t.Fatalf("SET Failed %v", bob.Out[3].Tape[1].Cell[5])
 	}
 }
@@ -516,7 +516,7 @@ func Test_GoBT_ASM(t *testing.T) {
 
 		btTx, err := bt.NewTxFromString(parityTx)
 		assert.Nil(t, err)
-		assert.NotNil(t, btTx)
+		assert.NotNil(t, *btTx)
 
 		asmBt, err := btTx.Outputs[0].LockingScript.ToASM()
 		assert.Nil(t, err)

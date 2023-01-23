@@ -78,7 +78,7 @@ func (t *Tx) FromBytes(line []byte) error {
 	// of this lib will work with (so they don't have to format the interface themselves)
 	fixedOuts := make([]bpu.Output, 0)
 	for _, out := range tu.Out {
-		address := fmt.Sprintf("%s", out.E.A)
+		address := fmt.Sprintf("%s", *out.E.A)
 		fixedOuts = append(fixedOuts, bpu.Output{
 			XPut: bpu.XPut{
 				I:    out.I,
@@ -135,12 +135,37 @@ func (t *Tx) FromBytes(line []byte) error {
 }
 
 // FromRawTxString takes a hex encoded tx string
-func (t *Tx) FromRawTxString(rawTxString string) error {
-	tx, err := bt.NewTxFromString(rawTxString)
-	if err != nil {
-		return err
+func (t *Tx) FromRawTxString(rawTxString string) (err error) {
+
+	var seperator = "|"
+	var l = bpu.IncludeL
+	var opReturn = uint8(106)
+	var opFalse = uint8(0)
+
+	var splitConfig = []bpu.SplitConfig{
+		{
+			Token: &bpu.Token{
+				Op: &opReturn,
+			},
+			Include: &l,
+		},
+		{
+			Token: &bpu.Token{
+				Op: &opFalse,
+			},
+			Include: &l,
+		},
+		{
+			Token: &bpu.Token{
+				S: &seperator,
+			},
+		},
 	}
-	return t.FromTx(tx)
+
+	bpuTx, err := bpu.Parse(bpu.ParseConfig{RawTxHex: rawTxString, SplitConfig: splitConfig})
+	t.BpuTx = *bpuTx
+
+	return
 }
 
 // FromString takes a BOB formatted string
