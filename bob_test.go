@@ -14,11 +14,11 @@ import (
 var sampleBobTx, sampleBobTxBadStrings, rawBobTx, parityBob, parityTx string
 
 func init() {
-	sampleBobTx = test.GetTestHex("./test/bob/207eaadc096849e037b8944df21a8bba6d91d8445848db047c0a3f963121e19d.json")
-	sampleBobTxBadStrings = test.GetTestHex("./test/bob/26b754e6fdf04121b8d91160a0b252a22ae30204fc552605b7f6d3f08419f29e.json")
-	rawBobTx = test.GetTestHex("./test/tx/2.hex")
-	parityBob = test.GetTestHex("./test/bob/98a5f6ef18eaea188bdfdc048f89a48af82627a15a76fd53584975f28ab3cc39.json")
-	parityTx = test.GetTestHex("./test/tx/98a5f6ef18eaea188bdfdc048f89a48af82627a15a76fd53584975f28ab3cc39.hex")
+	sampleBobTx = test.GetTestHex("./testing/bob/207eaadc096849e037b8944df21a8bba6d91d8445848db047c0a3f963121e19d.json")
+	sampleBobTxBadStrings = test.GetTestHex("./testing/bob/26b754e6fdf04121b8d91160a0b252a22ae30204fc552605b7f6d3f08419f29e.json")
+	rawBobTx = test.GetTestHex("./testing/tx/2.hex")
+	parityBob = test.GetTestHex("./testing/bob/98a5f6ef18eaea188bdfdc048f89a48af82627a15a76fd53584975f28ab3cc39.json")
+	parityTx = test.GetTestHex("./testing/tx/98a5f6ef18eaea188bdfdc048f89a48af82627a15a76fd53584975f28ab3cc39.hex")
 }
 
 // TestNewFromBytes tests for nil case in NewFromBytes()
@@ -429,6 +429,8 @@ func TestNewFromTxPanic(t *testing.T) {
 func TestTx_ToTx(t *testing.T) {
 
 	bobTx, err := NewFromString(sampleBobTx)
+
+	fmt.Printf("error: %s", err)
 	assert.NoError(t, err)
 	assert.NotNil(t, bobTx)
 
@@ -507,7 +509,7 @@ func BenchmarkTx_ToRawTxString(b *testing.B) {
 	}
 }
 
-// Test parity with bmapjs]
+// Test parity with bmapjs
 func Test_GoBT_ASM(t *testing.T) {
 
 	t.Run("test go-bt ASM", func(t *testing.T) {
@@ -517,6 +519,8 @@ func Test_GoBT_ASM(t *testing.T) {
 		// assert.Nil(t, err)
 
 		btTx, err := bt.NewTxFromString(parityTx)
+
+		fmt.Printf("error %s", err)
 		assert.Nil(t, err)
 		assert.NotNil(t, *btTx)
 

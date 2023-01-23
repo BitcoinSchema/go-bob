@@ -73,9 +73,7 @@ func (t *Tx) FromBytes(line []byte) error {
 		return fmt.Errorf("error parsing line: %v, %w", line, err)
 	}
 
-	// The out.E.A field can be either a boolean or a string
-	// So we need to unmarshal into an interface, and fix the normal struct the user
-	// of this lib will work with (so they don't have to format the interface themselves)
+	// The out.E.A field can be either an address or "false"
 	fixedOuts := make([]bpu.Output, 0)
 	for _, out := range tu.Out {
 		address := fmt.Sprintf("%s", *out.E.A)
@@ -84,7 +82,7 @@ func (t *Tx) FromBytes(line []byte) error {
 				I:    out.I,
 				Tape: out.Tape,
 				E: bpu.E{
-					A: &address, // todo: test this with (string) and (bool)
+					A: &address,
 					V: out.E.V,
 					I: out.E.I,
 					H: out.E.H,
@@ -386,11 +384,14 @@ func (t *Tx) ToTx() (*bt.Tx, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to get script from asm: %v error: %w", scriptAsm, err)
 		}
-
+		v := uint64(0)
+		if in.E.V != nil {
+			v = *in.E.V
+		}
 		// add inputs
 		i := &bt.Input{
 			PreviousTxOutIndex: in.E.I,
-			PreviousTxSatoshis: *in.E.V,
+			PreviousTxSatoshis: v,
 			PreviousTxScript:   prevTxScript,
 			UnlockingScript:    builtUnlockScript,
 			SequenceNumber:     in.Seq,
@@ -411,9 +412,9 @@ func (t *Tx) ToTx() (*bt.Tx, error) {
 					lockScriptAsm = append(lockScriptAsm, ProtocolDelimiterAsm)
 				}
 
-				if len(*cell.H) > 0 {
+				if cell.H != nil {
 					lockScriptAsm = append(lockScriptAsm, *cell.H)
-				} else if len(*cell.Ops) > 0 {
+				} else if cell.Ops == nil {
 					lockScriptAsm = append(lockScriptAsm, *cell.Ops)
 				}
 			}
