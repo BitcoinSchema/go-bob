@@ -15,6 +15,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/bitcoinschema/go-bob/util"
+	"github.com/bitcoinschema/go-bpu"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
 )
@@ -28,99 +30,11 @@ const (
 	ProtocolDelimiter     = string(rune(ProtocolDelimiterInt))
 )
 
-// TxUnmarshal is a BOB formatted Bitcoin transaction that includes
-// interfaces where types may change
-//
-// DO NOT CHANGE ORDER - aligned for memory optimization (malign)
-type TxUnmarshal struct {
-	In   []Input           `json:"in"`
-	Out  []OutputUnmarshal `json:"out"`
-	ID   string            `json:"_id"`
-	Tx   TxInfo            `json:"tx"`
-	Blk  Blk               `json:"blk"`
-	Lock uint32            `json:"lock"`
-}
-
-// OutputUnmarshal is a transaction output
-type OutputUnmarshal struct {
-	I    uint8      `json:"i"`
-	Tape []Tape     `json:"tape"`
-	E    EUnmarshal `json:"e,omitempty"`
-}
-
-// EUnmarshal has address and value information
-type EUnmarshal struct {
-	A interface{} `json:"a,omitempty" bson:"a,omitempty"`
-	V uint64      `json:"v,omitempty" bson:"v,omitempty"`
-	I uint32      `json:"i" bson:"i"`
-	H string      `json:"h,omitempty" bson:"h,omitempty"`
-}
-
-// E has address and value information
-type E struct {
-	A string `json:"a,omitempty" bson:"a,omitempty"`
-	V uint64 `json:"v,omitempty" bson:"v,omitempty"`
-	I uint32 `json:"i" bson:"i"`
-	H string `json:"h,omitempty" bson:"h,omitempty"`
-}
-
-// Cell is a single OP_RETURN protocol
-type Cell struct {
-	H   string `json:"h,omitempty" bson:"h,omitempty"`
-	B   string `json:"b,omitempty" bson:"b,omitempty"`
-	LB  string `json:"lb,omitempty" bson:"lb,omitempty"`
-	S   string `json:"s,omitempty" bson:"s,omitempty"`
-	LS  string `json:"ls,omitempty" bson:"ls,omitempty"`
-	I   uint8  `json:"i" bson:"i"`
-	II  uint8  `json:"ii" bson:"ii"`
-	Op  uint16 `json:"op,omitempty" bson:"op,omitempty"`
-	Ops string `json:"ops,omitempty" bson:"ops,omitempty"`
-}
-
-// Input is a transaction input
-//
-// DO NOT CHANGE ORDER - aligned for memory optimization (malign)
-type Input struct {
-	E    E      `json:"e" bson:"e"`
-	Tape []Tape `json:"tape" bson:"tape"`
-	Seq  uint32 `json:"seq" bson:"seq"`
-	I    uint8  `json:"i" bson:"i"`
-}
-
-// Tape is a tape
-type Tape struct {
-	Cell []Cell `json:"cell"`
-	I    uint8  `json:"i"`
-}
-
-// Output is a transaction output
-type Output struct {
-	I    uint8  `json:"i"`
-	Tape []Tape `json:"tape"`
-	E    E      `json:"e,omitempty"`
-}
-
-// Blk contains the block info
-type Blk struct {
-	I uint32 `json:"i"`
-	T uint32 `json:"t"`
-}
-
-// TxInfo contains the transaction info
-type TxInfo struct {
-	H string `json:"h"`
-}
-
 // Tx is a BOB formatted Bitcoin transaction
 //
 // DO NOT CHANGE ORDER - aligned for memory optimization (malign)
 type Tx struct {
-	In   []Input  `json:"in"`
-	Out  []Output `json:"out"`
-	ID   string   `json:"_id"`
-	Tx   TxInfo   `json:"tx"`
-	Blk  Blk      `json:"blk"`
-	Lock uint32   `json:"lock"`
+	bpu.BpuTx
 }
 
 // NewFromBytes creates a new BOB Tx from a NDJSON line representing a BOB transaction,
@@ -154,7 +68,7 @@ func NewFromTx(tx *bt.Tx) (bobTx *Tx, err error) {
 
 // FromBytes takes a BOB formatted tx string as bytes
 func (t *Tx) FromBytes(line []byte) error {
-	tu := new(TxUnmarshal)
+	tu := new(bpu.BpuTx)
 	if err := json.Unmarshal(line, &tu); err != nil {
 		return fmt.Errorf("error parsing line: %v, %w", line, err)
 	}
@@ -162,16 +76,19 @@ func (t *Tx) FromBytes(line []byte) error {
 	// The out.E.A field can be either a boolean or a string
 	// So we need to unmarshal into an interface, and fix the normal struct the user
 	// of this lib will work with (so they don't have to format the interface themselves)
-	fixedOuts := make([]Output, 0)
+	fixedOuts := make([]bpu.Output, 0)
 	for _, out := range tu.Out {
-		fixedOuts = append(fixedOuts, Output{
-			I:    out.I,
-			Tape: out.Tape,
-			E: E{
-				A: fmt.Sprintf("%s", out.E.A), // todo: test this with (string) and (bool)
-				V: out.E.V,
-				I: out.E.I,
-				H: out.E.H,
+		address := fmt.Sprintf("%s", out.E.A)
+		fixedOuts = append(fixedOuts, bpu.Output{
+			XPut: bpu.XPut{
+				I:    out.I,
+				Tape: out.Tape,
+				E: bpu.E{
+					A: &address, // todo: test this with (string) and (bool)
+					V: out.E.V,
+					I: out.E.I,
+					H: out.E.H,
+				},
 			},
 		})
 	}
@@ -186,13 +103,14 @@ func (t *Tx) FromBytes(line []byte) error {
 	for outIdx, out := range t.Out {
 		for tapeIdx, tape := range out.Tape {
 			for cellIdx, cell := range tape.Cell {
-				if len(cell.H) == 0 && len(cell.B) > 0 {
+				if cell.H == nil && cell.B != nil && len(*cell.B) > 0 {
 					// base 64 decode cell.B and encode it to hex string
-					cellBytes, err := base64.StdEncoding.DecodeString(cell.B)
+					cellBytes, err := base64.StdEncoding.DecodeString(*cell.B)
 					if err != nil {
 						return err
 					}
-					t.Out[outIdx].Tape[tapeIdx].Cell[cellIdx].H = hex.EncodeToString(cellBytes)
+					var hexStr = hex.EncodeToString(cellBytes)
+					t.Out[outIdx].Tape[tapeIdx].Cell[cellIdx].H = &hexStr
 				}
 			}
 		}
@@ -200,13 +118,14 @@ func (t *Tx) FromBytes(line []byte) error {
 	for inIdx, in := range t.In {
 		for tapeIdx, tape := range in.Tape {
 			for cellIdx, cell := range tape.Cell {
-				if len(cell.H) == 0 && len(cell.B) > 0 {
+				if cell.H == nil && cell.B != nil && len(*cell.B) > 0 {
 					// base 64 decode cell.B and encode it to hex string
-					cellBytes, err := base64.StdEncoding.DecodeString(cell.B)
+					cellBytes, err := base64.StdEncoding.DecodeString(*cell.B)
 					if err != nil {
 						return err
 					}
-					t.In[inIdx].Tape[tapeIdx].Cell[cellIdx].H = hex.EncodeToString(cellBytes)
+					hexStr := hex.EncodeToString(cellBytes)
+					t.In[inIdx].Tape[tapeIdx].Cell[cellIdx].H = &hexStr
 				}
 			}
 		}
@@ -239,18 +158,25 @@ func (t *Tx) FromTx(tx *bt.Tx) error {
 	// Set the inputs
 	for inIdx, i := range tx.Inputs {
 
-		bobInput := Input{
-			I: uint8(inIdx),
-			Tape: []Tape{{
-				Cell: []Cell{{
-					H: hex.EncodeToString(i.Bytes(false)),
-					B: base64.RawStdEncoding.EncodeToString(i.Bytes(false)),
-					S: i.String(),
+		cellHex := hex.EncodeToString(i.Bytes(false))
+		cellB64 := base64.RawStdEncoding.EncodeToString(i.Bytes(false))
+		cellStr := i.String()
+		txid := hex.EncodeToString(i.PreviousTxID())
+
+		bobInput := bpu.Input{
+			XPut: bpu.XPut{
+				I: uint8(inIdx),
+				Tape: []bpu.Tape{{
+					Cell: []bpu.Cell{{
+						H: &cellHex,
+						B: &cellB64,
+						S: &cellStr,
+					}},
+					I: 0,
 				}},
-				I: 0,
-			}},
-			E: E{
-				H: hex.EncodeToString(i.PreviousTxID()),
+				E: bpu.E{
+					H: &txid,
+				},
 			},
 		}
 
@@ -279,38 +205,107 @@ func (t *Tx) FromTx(tx *bt.Tx) error {
 
 		pushDatas := strings.Split(asm, " ")
 
-		var outTapes []Tape
-		bobOutput := Output{
-			I:    uint8(idxOut),
-			Tape: outTapes,
-			E: E{
-				A: adr,
+		var outTapes []bpu.Tape
+		bobOutput := bpu.Output{
+			XPut: bpu.XPut{
+				I:    uint8(idxOut),
+				Tape: outTapes,
+				E: bpu.E{
+					A: &adr,
+				},
 			},
 		}
 
-		var currentTape Tape
+		var opTape bpu.Tape
+		var currentTape bpu.Tape
+		var opOffset = 0
 		if len(pushDatas) > 0 {
 
-			for pdIdx, pushData := range pushDatas {
+			// Check for OP_RETURN or OP_FALSE + OP_RETURN
+			// Look for OP_FALSE OP_RETURN or just OP_RETURN and separate into a cell collection
+			if len(pushDatas[0]) > 0 {
+				if pushDatas[0] == "OP_FALSE" || pushDatas[0] == "0" {
+					// OP_FALSE in position 0
+					var op = uint8(bscript.OpFALSE)
+					var ops = "OP_FALSE"
+					opTape.Cell = append(opTape.Cell, bpu.Cell{
+						Op:  &op,
+						Ops: &ops,
+						I:   uint8(idxOut),
+						II:  uint8(0),
+					})
+					opOffset += 1
+					// Check for OP_RETURN
+					if len(pushDatas[1]) > 0 && pushDatas[1] == "OP_RETURN" {
+						// OP_FALSE OP_RETURN
+						var op = uint8(bscript.OpRETURN)
+						var ops = "OP_RETURN"
+						opTape.Cell = append(opTape.Cell, bpu.Cell{
+							Op:  &op,
+							Ops: &ops,
+							I:   uint8(idxOut),
+							II:  uint8(1),
+						})
+						// pull them out into their own cell collection
+						outTapes = append(outTapes, opTape)
+						opOffset += 1
 
+					}
+				} else if len(pushDatas[0]) > 0 && pushDatas[0] == "OP_RETURN" {
+					var op = uint8(bscript.OpRETURN)
+					var ops = "OP_RETURN"
+					opTape.Cell = append(opTape.Cell, bpu.Cell{
+						Op:  &op,
+						Ops: &ops,
+						I:   uint8(idxOut),
+						II:  uint8(0),
+					})
+					opOffset += 1
+
+					// OP_RETURN in position 0
+				}
+				if opOffset > 0 {
+					outTapes = append(outTapes, opTape)
+				}
+			}
+			for pdIdx, pushData := range pushDatas {
+				if pdIdx < opOffset {
+					continue
+				}
 				// Ignore error if it fails, use empty
 				pushDataBytes, _ := hex.DecodeString(pushData)
 				b64String := base64.StdEncoding.EncodeToString(pushDataBytes)
+				var pushDataString = string(pushDataBytes)
 
+				// assume the pushdata is a chunk of
+				pushDataHex := pushData
+				var op uint8
+				var ops string
+				// asm is being put into the hex field - need to convert back to hex from opcodes if they exist in here
+				if pushDataByte, ok := util.OpCodeStrings[pushData]; ok {
+					// this pushdata is a valid opcode
+					pushDataHex = hex.EncodeToString([]byte{pushDataByte})
+					op = uint8(pushDataByte)
+					ops = pushData
+				}
 				if pushData != ProtocolDelimiterAsm {
-					currentTape.Cell = append(currentTape.Cell, Cell{
-						B:  b64String,
-						H:  pushData,
-						S:  string(pushDataBytes),
-						I:  uint8(idxOut),
-						II: uint8(pdIdx),
+					currentTape.Cell = append(currentTape.Cell, bpu.Cell{
+						Op:  &op,
+						Ops: &ops,
+						B:   &b64String,
+						H:   &pushDataHex,
+						S:   &pushDataString,
+						I:   uint8(idxOut),
+						II:  uint8(pdIdx - opOffset),
 					})
 				}
 				// Note: OP_SWAP is 0x7c which is also ascii "|" which is our protocol separator.
 				// This is not used as OP_SWAP at all since this is in the script after the OP_FALSE
-				if "OP_RETURN" == pushData || ProtocolDelimiterAsm == pushData {
+				// if "OP_RETURN" == pushData || ProtocolDelimiterAsm == pushData {
+				if ProtocolDelimiterAsm == pushData {
 					outTapes = append(outTapes, currentTape)
-					currentTape = Tape{}
+					currentTape = bpu.Tape{}
+					opOffset = 0
 				}
 			}
 		}
@@ -354,12 +349,12 @@ func (t *Tx) ToTx() (*bt.Tx, error) {
 			return nil, fmt.Errorf("failed to process inputs. More tapes or cells than expected. %+v", in.Tape)
 		}
 
-		prevTxScript, _ := bscript.NewP2PKHFromAddress(in.E.A)
+		prevTxScript, _ := bscript.NewP2PKHFromAddress(*in.E.A)
 
 		var scriptAsm []string
 		for _, cell := range in.Tape[0].Cell {
 			cellData := cell.H
-			scriptAsm = append(scriptAsm, cellData)
+			scriptAsm = append(scriptAsm, *cellData)
 		}
 
 		builtUnlockScript, err := bscript.NewFromASM(strings.Join(scriptAsm, " "))
@@ -370,13 +365,13 @@ func (t *Tx) ToTx() (*bt.Tx, error) {
 		// add inputs
 		i := &bt.Input{
 			PreviousTxOutIndex: in.E.I,
-			PreviousTxSatoshis: in.E.V,
+			PreviousTxSatoshis: *in.E.V,
 			PreviousTxScript:   prevTxScript,
 			UnlockingScript:    builtUnlockScript,
 			SequenceNumber:     in.Seq,
 		}
 
-		_ = i.PreviousTxIDAddStr(in.E.H)
+		_ = i.PreviousTxIDAddStr(*in.E.H)
 		tx.Inputs = append(tx.Inputs, i) // AddInput(i)
 	}
 
@@ -391,17 +386,17 @@ func (t *Tx) ToTx() (*bt.Tx, error) {
 					lockScriptAsm = append(lockScriptAsm, ProtocolDelimiterAsm)
 				}
 
-				if len(cell.H) > 0 {
-					lockScriptAsm = append(lockScriptAsm, cell.H)
-				} else if len(cell.Ops) > 0 {
-					lockScriptAsm = append(lockScriptAsm, cell.Ops)
+				if len(*cell.H) > 0 {
+					lockScriptAsm = append(lockScriptAsm, *cell.H)
+				} else if len(*cell.Ops) > 0 {
+					lockScriptAsm = append(lockScriptAsm, *cell.Ops)
 				}
 			}
 		}
 
 		lockingScript, _ := bscript.NewFromASM(strings.Join(lockScriptAsm, " "))
 		o := &bt.Output{
-			Satoshis:      out.E.V,
+			Satoshis:      *out.E.V,
 			LockingScript: lockingScript,
 		}
 

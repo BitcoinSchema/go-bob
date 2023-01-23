@@ -2,6 +2,7 @@ package bob
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/bitcoinschema/go-bitcoin/v2"
@@ -10,12 +11,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var sampleBobTx, sampleBobTxBadStrings, rawBobTx string
+var sampleBobTx, sampleBobTxBadStrings, rawBobTx, parityBob, parityTx string
 
 func init() {
 	sampleBobTx = test.GetTestHex("./test/bob/207eaadc096849e037b8944df21a8bba6d91d8445848db047c0a3f963121e19d.json")
 	sampleBobTxBadStrings = test.GetTestHex("./test/bob/26b754e6fdf04121b8d91160a0b252a22ae30204fc552605b7f6d3f08419f29e.json")
 	rawBobTx = test.GetTestHex("./test/tx/2.hex")
+	parityBob = test.GetTestHex("./test/bob/98a5f6ef18eaea188bdfdc048f89a48af82627a15a76fd53584975f28ab3cc39.json")
+	parityTx = test.GetTestHex("./test/tx/98a5f6ef18eaea188bdfdc048f89a48af82627a15a76fd53584975f28ab3cc39.hex")
 }
 
 // TestNewFromBytes tests for nil case in NewFromBytes()
@@ -269,7 +272,7 @@ func TestMapFromRawTxString2(t *testing.T) {
 
 	if err != nil {
 		t.Fatalf("error occurred: %s", err)
-	} else if bob.Out[3].Tape[1].Cell[5].S != "offer_click" {
+	} else if *bob.Out[3].Tape[2].Cell[5].S != "offer_click" {
 		t.Fatalf("SET Failed %v", bob.Out[3].Tape[1].Cell[5])
 	}
 }
@@ -376,8 +379,8 @@ func TestNewFromTxString(t *testing.T) {
 	bapOut := &bobTxFromString.Out[0].Tape[1]
 	const bapPrefix = "1BAPSuaPnfGnSBM3GLV9yhxUdYe4vGbdMT"
 
-	if bapOut.Cell[0].S != bapPrefix {
-		t.Errorf("Expected string(%s) is not same as actual string (%s)", bapPrefix, bapOut.Cell[0].S)
+	if *bapOut.Cell[0].S != bapPrefix {
+		t.Errorf("Expected string(%s) is not same as actual string (%s)", bapPrefix, *bapOut.Cell[0].S)
 	}
 
 }
@@ -500,6 +503,53 @@ func BenchmarkTx_ToRawTxString(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, _ = bobTx.ToRawTxString()
 	}
+}
+
+// Test parity with bmapjs]
+func Test_GoBT_ASM(t *testing.T) {
+
+	t.Run("test go-bt ASM", func(t *testing.T) {
+
+		// goBobTx, err := NewFromRawTxString(parityTx)
+		// assert.NotNil(t, goBobTx)
+		// assert.Nil(t, err)
+
+		btTx, err := bt.NewTxFromString(parityTx)
+		assert.Nil(t, err)
+		assert.NotNil(t, btTx)
+
+		asmBt, err := btTx.Outputs[0].LockingScript.ToASM()
+		assert.Nil(t, err)
+
+		pushDatas := strings.Split(asmBt, " ")
+		assert.Equal(t, 10, len(pushDatas))
+		assert.Equal(t, "OP_RETURN", pushDatas[0])
+	})
+
+}
+
+// Test parity with bmapjs]
+func TestBob_Vs_Bob(t *testing.T) {
+	bmapjsTx, _ := NewFromString(parityBob)
+	// import a tx from hex
+	// TODO: - should this even work from a Bob string like this?
+	goBobTx, _ := NewFromRawTxString(parityTx)
+
+	// get same tx from bob output from bmapjs
+
+	// make sure number of overall keys,  ins, outs, tapes, and cells are identical
+
+	assert.Equal(t, len(bmapjsTx.Out), len(goBobTx.Out))
+	// assert.Equal(t, len(bmapjsTx.Out[0].Tape), len(goBobTx.Out[0].Tape))
+	// assert.Equal(t, len(bmapjsTx.Out[0].Tape[1].Cell), len(goBobTx.Out[0].Tape[1].Cell))
+	assert.Equal(t, *bmapjsTx.Out[0].Tape[1].Cell[3].Ops, *goBobTx.Out[0].Tape[1].Cell[3].Ops)
+
+	// fmt.Println(fmt.Sprintf("expected %+v", bmapjsTx.Out[0].Tape[1].Cell))
+	// fmt.Println(fmt.Sprintf("actual %+v", goBobTx.Out[0].Tape[1].Cell))
+
+	// assert.Equal(t, len(bmapjsTx.Out[1].Tape), len(goBobTx.Out[1].Tape))
+	// assert.Equal(t, len(bmapjsTx.Out[1].Tape[0].Cell), len(goBobTx.Out[1].Tape[0].Cell))
+	assert.Equal(t, bmapjsTx.Tx.H, goBobTx.Tx.H)
 }
 
 // TestTx_ToString tests for nil case in ToString()

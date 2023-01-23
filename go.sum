@@ -1,5 +1,7 @@
 github.com/bitcoinschema/go-bitcoin/v2 v2.0.0-alpha.3 h1:sIg1FAKz7RSWDM5bu4L5OPIPKu11mPtiFFunVyjiGjk=
 github.com/bitcoinschema/go-bitcoin/v2 v2.0.0-alpha.3/go.mod h1:VN6ACz7ptkAvJ6PcPEb2pt5lAlKlJtGE1smtjKn3i8I=
+github.com/bitcoinschema/go-bpu v0.0.1 h1:rAWp1AKpNrg/2xc6Ra6hEwhX9TI8Ms6NigO1wwEk+K0=
+github.com/bitcoinschema/go-bpu v0.0.1/go.mod h1:i41D9NP5KIk/oCt8XrRhN27YerZCUG6vjScXDhNn5Us=
 github.com/bitcoinsv/bsvd v0.0.0-20190609155523-4c29707f7173 h1:2yTIV9u7H0BhRDGXH5xrAwAz7XibWJtX2dNezMeNsUo=
 github.com/bitcoinsv/bsvd v0.0.0-20190609155523-4c29707f7173/go.mod h1:BZ1UcC9+tmcDEcdVXgpt13hMczwJxWzpAn68wNs7zRA=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
