@@ -62,6 +62,7 @@ func TestNewFromBytes(t *testing.T) {
 	// Run tests
 	var b *Tx
 	var err error
+
 	for _, test := range tests {
 		if b, err = NewFromBytes(test.inputLine); err != nil && !test.expectedError {
 			t.Errorf("%s Failed: [%v] inputted and error not expected but got: %s", t.Name(), test.inputLine, err.Error())
@@ -370,7 +371,8 @@ func TestNewFromTx(t *testing.T) {
 
 func TestNewFromTxString(t *testing.T) {
 	// BAP attestation
-	testHex := test.GetTestHex("./test/tx/98a5f6ef18eaea188bdfdc048f89a48af82627a15a76fd53584975f28ab3cc39.hex")
+	testHex := test.GetTestHex("./testing/tx/98a5f6ef18eaea188bdfdc048f89a48af82627a15a76fd53584975f28ab3cc39.hex")
+
 	bobTxFromString, err := NewFromRawTxString(testHex)
 	if err != nil {
 		t.Fatalf("error occurred1: %s", err.Error())
