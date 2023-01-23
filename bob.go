@@ -375,9 +375,10 @@ func (t *Tx) ToTx() (*bt.Tx, error) {
 		prevTxScript, _ := bscript.NewP2PKHFromAddress(*in.E.A)
 
 		var scriptAsm []string
+		// TODO: This will break if there is ever a bpu splitter present in inputs
 		for _, cell := range in.Tape[0].Cell {
-			cellData := cell.H
-			scriptAsm = append(scriptAsm, *cellData)
+			cellData := *cell.H
+			scriptAsm = append(scriptAsm, cellData)
 		}
 
 		builtUnlockScript, err := bscript.NewFromASM(strings.Join(scriptAsm, " "))

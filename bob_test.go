@@ -438,6 +438,14 @@ func TestTx_ToTx(t *testing.T) {
 	tx, err = bobTx.ToTx()
 	assert.NoError(t, err)
 	assert.NotNil(t, tx)
+
+	// check that they have same number of ins and outs
+
+	assert.Equal(t, len(bobTx.In), len(tx.Inputs))
+	assert.Equal(t, len(bobTx.Out), len(tx.Outputs))
+
+	// TODO: Why does this match? what is 48 and 21
+	assert.Equal(t, fmt.Sprintf("48%s21%s", *bobTx.In[0].Tape[0].Cell[0].H, *bobTx.In[0].Tape[0].Cell[1].H), tx.Inputs[0].UnlockingScript.String())
 	assert.Equal(t, bobTx.Tx.H, tx.TxID())
 }
 
@@ -548,7 +556,7 @@ func TestBob_Vs_Bob(t *testing.T) {
 	assert.Equal(t, len(bmapjsTx.Out), len(goBobTx.Out))
 	// assert.Equal(t, len(bmapjsTx.Out[0].Tape), len(goBobTx.Out[0].Tape))
 	// assert.Equal(t, len(bmapjsTx.Out[0].Tape[1].Cell), len(goBobTx.Out[0].Tape[1].Cell))
-	assert.Equal(t, *bmapjsTx.Out[0].Tape[1].Cell[3].Ops, *goBobTx.Out[0].Tape[1].Cell[3].Ops)
+	assert.Equal(t, *bmapjsTx.Out[0].Tape[1].Cell[3].H, *goBobTx.Out[0].Tape[1].Cell[3].H)
 
 	// fmt.Println(fmt.Sprintf("expected %+v", bmapjsTx.Out[0].Tape[1].Cell))
 	// fmt.Println(fmt.Sprintf("actual %+v", goBobTx.Out[0].Tape[1].Cell))
