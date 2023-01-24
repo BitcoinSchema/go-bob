@@ -3,6 +3,7 @@ package bob
 import (
 	"encoding/hex"
 	"fmt"
+	"log"
 	"strings"
 	"testing"
 
@@ -447,10 +448,19 @@ func TestTx_ToTx(t *testing.T) {
 	assert.Equal(t, len(bobTx.Out), len(tx.Outputs))
 
 	parts, err := bscript.DecodeParts(*tx.Inputs[0].UnlockingScript)
+	assert.NoError(t, err)
 	part0 := hex.EncodeToString(parts[0])
 	part1 := hex.EncodeToString(parts[1])
 	assert.Equal(t, *bobTx.In[0].Tape[0].Cell[0].H, part0)
 	assert.Equal(t, *bobTx.In[0].Tape[0].Cell[1].H, part1)
+
+	outParts, err := bscript.DecodeParts(*tx.Outputs[1].LockingScript)
+	assert.NoError(t, err)
+	outPart0 := hex.EncodeToString(outParts[0])
+	outPart1 := hex.EncodeToString(outParts[1])
+
+	log.Printf("%x ", outPart1)
+	assert.Equal(t, *bobTx.Out[0].Tape[0].Cell[0].Op, outPart0)
 
 	assert.Equal(t, bobTx.Tx.H, tx.TxID())
 }

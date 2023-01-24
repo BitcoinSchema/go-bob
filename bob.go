@@ -416,8 +416,10 @@ func (t *Tx) ToTx() (*bt.Tx, error) {
 
 				if cell.H != nil {
 					lockScriptAsm = append(lockScriptAsm, *cell.H)
-				} else if cell.Ops == nil {
+				} else if cell.Ops != nil {
 					lockScriptAsm = append(lockScriptAsm, *cell.Ops)
+				} else {
+					fmt.Printf("no maatch %+v", cell)
 				}
 			}
 		}
