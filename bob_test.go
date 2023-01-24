@@ -454,13 +454,13 @@ func TestTx_ToTx(t *testing.T) {
 	assert.Equal(t, *bobTx.In[0].Tape[0].Cell[0].H, part0)
 	assert.Equal(t, *bobTx.In[0].Tape[0].Cell[1].H, part1)
 
-	outParts, err := bscript.DecodeParts(*tx.Outputs[1].LockingScript)
+	outParts, err := bscript.DecodeParts(*tx.Outputs[0].LockingScript)
 	assert.NoError(t, err)
-	outPart0 := hex.EncodeToString(outParts[0])
 	outPart1 := hex.EncodeToString(outParts[1])
 
 	log.Printf("%x ", outPart1)
-	assert.Equal(t, *bobTx.Out[0].Tape[0].Cell[0].Op, outPart0)
+
+	assert.Equal(t, *bobTx.Out[0].Tape[0].Cell[0].Op, byte(outParts[0][0]))
 
 	assert.Equal(t, bobTx.Tx.H, tx.TxID())
 }
