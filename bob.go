@@ -389,9 +389,10 @@ func (t *Tx) ToTx() (*bt.Tx, error) {
 		if in.E.V != nil {
 			v = *in.E.V
 		}
+
 		// add inputs
 		i := &bt.Input{
-			PreviousTxOutIndex: in.E.I,
+			PreviousTxOutIndex: in.E.I, // TODO: This might be getting set incorrectly?
 			PreviousTxSatoshis: v,
 			PreviousTxScript:   prevTxScript,
 			UnlockingScript:    builtUnlockScript,

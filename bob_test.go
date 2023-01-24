@@ -1,6 +1,7 @@
 package bob
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"testing"
@@ -8,6 +9,7 @@ import (
 	"github.com/bitcoinschema/go-bitcoin/v2"
 	test "github.com/bitcoinschema/go-bob/testing"
 	"github.com/libsv/go-bt/v2"
+	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -444,8 +446,12 @@ func TestTx_ToTx(t *testing.T) {
 	assert.Equal(t, len(bobTx.In), len(tx.Inputs))
 	assert.Equal(t, len(bobTx.Out), len(tx.Outputs))
 
-	// TODO: Why does this match? what is 48 and 21
-	assert.Equal(t, fmt.Sprintf("48%s21%s", *bobTx.In[0].Tape[0].Cell[0].H, *bobTx.In[0].Tape[0].Cell[1].H), tx.Inputs[0].UnlockingScript.String())
+	parts, err := bscript.DecodeParts(*tx.Inputs[0].UnlockingScript)
+	part0 := hex.EncodeToString(parts[0])
+	part1 := hex.EncodeToString(parts[1])
+	assert.Equal(t, *bobTx.In[0].Tape[0].Cell[0].H, part0)
+	assert.Equal(t, *bobTx.In[0].Tape[0].Cell[1].H, part1)
+
 	assert.Equal(t, bobTx.Tx.H, tx.TxID())
 }
 
