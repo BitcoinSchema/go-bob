@@ -76,7 +76,10 @@ func (t *Tx) FromBytes(line []byte) error {
 	// The out.E.A field can be either an address or "false"
 	fixedOuts := make([]bpu.Output, 0)
 	for _, out := range tu.Out {
-		address := fmt.Sprintf("%s", *out.E.A)
+		var address string
+		if out.E.A != nil {
+			address = *out.E.A
+		}
 		fixedOuts = append(fixedOuts, bpu.Output{
 			XPut: bpu.XPut{
 				I:    out.I,
@@ -161,7 +164,9 @@ func (t *Tx) FromRawTxString(rawTxString string) (err error) {
 	}
 
 	bpuTx, err := bpu.Parse(bpu.ParseConfig{RawTxHex: rawTxString, SplitConfig: splitConfig})
-	t.BpuTx = *bpuTx
+	if bpuTx != nil {
+		t.BpuTx = *bpuTx
+	}
 
 	return
 }
