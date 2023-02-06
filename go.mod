@@ -3,7 +3,7 @@ module github.com/bitcoinschema/go-bob
 go 1.19
 
 require (
-	github.com/bitcoinschema/go-bitcoin/v2 v2.0.0-alpha.3
+	github.com/bitcoinschema/go-bitcoin/v2 v2.0.2
 	github.com/libsv/go-bt/v2 v2.1.1
 	github.com/stretchr/testify v1.8.1
 )
