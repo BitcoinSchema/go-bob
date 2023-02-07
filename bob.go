@@ -266,7 +266,7 @@ func (t *Tx) FromTx(tx *bt.Tx) error {
 					// Check for OP_RETURN
 					if len(pushDatas[1]) > 0 && pushDatas[1] == "OP_RETURN" {
 						// OP_FALSE OP_RETURN
-						var op = uint8(bscript.OpRETURN)
+						var op = bscript.OpRETURN
 						var ops = "OP_RETURN"
 						opTape.Cell = append(opTape.Cell, bpu.Cell{
 							Op:  &op,
@@ -280,7 +280,7 @@ func (t *Tx) FromTx(tx *bt.Tx) error {
 
 					}
 				} else if len(pushDatas[0]) > 0 && pushDatas[0] == "OP_RETURN" {
-					var op = uint8(bscript.OpRETURN)
+					var op = bscript.OpRETURN
 					var ops = "OP_RETURN"
 					opTape.Cell = append(opTape.Cell, bpu.Cell{
 						Op:  &op,
