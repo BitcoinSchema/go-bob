@@ -138,7 +138,7 @@ func (t *Tx) FromBytes(line []byte) error {
 // FromRawTxString takes a hex encoded tx string
 func (t *Tx) FromRawTxString(rawTxString string) (err error) {
 
-	var seperator = "|"
+	var separator = "|"
 	var l = bpu.IncludeL
 	var opReturn = uint8(106)
 	var opFalse = uint8(0)
@@ -158,7 +158,7 @@ func (t *Tx) FromRawTxString(rawTxString string) (err error) {
 		},
 		{
 			Token: &bpu.Token{
-				S: &seperator,
+				S: &separator,
 			},
 		},
 	}
