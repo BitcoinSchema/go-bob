@@ -313,7 +313,7 @@ func (t *Tx) FromTx(tx *bt.Tx) error {
 				if pushDataByte, ok := util.OpCodeStrings[pushData]; ok {
 					// this pushdata is a valid opcode
 					pushDataHex = hex.EncodeToString([]byte{pushDataByte})
-					op = uint8(pushDataByte)
+					op = pushDataByte
 					ops = pushData
 				}
 				if pushData != ProtocolDelimiterAsm {
