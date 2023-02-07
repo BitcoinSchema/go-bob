@@ -3,7 +3,7 @@ package util
 
 import "github.com/libsv/go-bt/v2/bscript"
 
-// this exists in bscript but is not exported :(
+// OpCodeStrings - exists in bscript but is not exported :(
 var OpCodeStrings = map[string]byte{
 	"OP_0":                   bscript.Op0,
 	"OP_ZERO":                bscript.OpZERO,
