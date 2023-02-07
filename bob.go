@@ -262,7 +262,7 @@ func (t *Tx) FromTx(tx *bt.Tx) error {
 						I:   uint8(idxOut),
 						II:  uint8(0),
 					})
-					opOffset += 1
+					opOffset++
 					// Check for OP_RETURN
 					if len(pushDatas[1]) > 0 && pushDatas[1] == "OP_RETURN" {
 						// OP_FALSE OP_RETURN
@@ -276,7 +276,7 @@ func (t *Tx) FromTx(tx *bt.Tx) error {
 						})
 						// pull them out into their own cell collection
 						outTapes = append(outTapes, opTape)
-						opOffset += 1
+						opOffset++
 
 					}
 				} else if len(pushDatas[0]) > 0 && pushDatas[0] == "OP_RETURN" {
@@ -288,7 +288,7 @@ func (t *Tx) FromTx(tx *bt.Tx) error {
 						I:   uint8(idxOut),
 						II:  uint8(0),
 					})
-					opOffset += 1
+					opOffset++
 
 					// OP_RETURN in position 0
 				}
