@@ -254,7 +254,7 @@ func (t *Tx) FromTx(tx *bt.Tx) error {
 			if len(pushDatas[0]) > 0 {
 				if pushDatas[0] == "OP_FALSE" || pushDatas[0] == "0" {
 					// OP_FALSE in position 0
-					var op = uint8(bscript.OpFALSE)
+					var op = bscript.OpFALSE
 					var ops = "OP_FALSE"
 					opTape.Cell = append(opTape.Cell, bpu.Cell{
 						Op:  &op,
