@@ -1,3 +1,4 @@
+// test package is for testing
 package test
 
 import (
