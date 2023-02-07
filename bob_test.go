@@ -462,7 +462,7 @@ func TestTx_ToTx(t *testing.T) {
 
 	log.Printf("%x ", outPart1)
 
-	assert.Equal(t, *bobTx.Out[0].Tape[0].Cell[0].Op, byte(outParts[0][0]))
+	assert.Equal(t, *bobTx.Out[0].Tape[0].Cell[0].Op, outParts[0][0])
 
 	assert.Equal(t, bobTx.Tx.H, tx.TxID())
 }
