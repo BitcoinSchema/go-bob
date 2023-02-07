@@ -605,21 +605,18 @@ func TestTx_ToString(t *testing.T) {
 	assert.Equal(t, bobTx.Tx.H, otherBob.Tx.H)
 }
 
-// TestTxx_ToString example using ToString()
-func TestTxx_ToString(t *testing.T) {
-	// Use an example TX
-	bobTx, err := NewFromString(sampleBobTx)
-	if err != nil {
+// TestTx_ToString2 example using ToString()
+func TestTx_ToString2(t *testing.T) {
+	// import a tx from hex
+	// TODO: - should this even work from a Bob string like this?
+	goBobTx, err := NewFromRawTxString(parityTx)
+	assert.NoError(t, err)
+
+	if _, err = goBobTx.ToString(); err != nil {
 		fmt.Printf("error occurred: %s", err.Error())
 	}
 	assert.NoError(t, err)
 
-	var rawTx string
-	if rawTx, err = bobTx.ToString(); err != nil {
-		fmt.Printf("error occurred: %s", err.Error())
-	}
-	assert.NoError(t, err)
-	assert.Equal(t, len(sampleBobTx), len(rawTx))
 }
 
 // BenchmarkTx_ToString benchmarks the method ToString()
