@@ -1,4 +1,4 @@
-// util package is utilities
+// Package util is utilities
 package util
 
 import "github.com/libsv/go-bt/v2/bscript"
