@@ -605,8 +605,8 @@ func TestTx_ToString(t *testing.T) {
 	assert.Equal(t, bobTx.Tx.H, otherBob.Tx.H)
 }
 
-// ExampleTx_ToString example using ToString()
-func ExampleTx_ToString(t *testing.T) {
+// TestTxx_ToString example using ToString()
+func TestTxx_ToString(t *testing.T) {
 	// Use an example TX
 	bobTx, err := NewFromString(sampleBobTx)
 	if err != nil {
