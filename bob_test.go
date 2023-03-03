@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var sampleBobTx, sampleBobTxBadStrings, rawBobTx, parityBob, parityTx string
+var sampleBobTx, sampleBobTxBadStrings, rawBobTx, parityBob, parityTx, boostTx string
 
 func init() {
 	sampleBobTx = test.GetTestHex("./testing/bob/207eaadc096849e037b8944df21a8bba6d91d8445848db047c0a3f963121e19d.json")
@@ -22,6 +22,7 @@ func init() {
 	rawBobTx = test.GetTestHex("./testing/tx/2.hex")
 	parityBob = test.GetTestHex("./testing/bob/98a5f6ef18eaea188bdfdc048f89a48af82627a15a76fd53584975f28ab3cc39.json")
 	parityTx = test.GetTestHex("./testing/tx/98a5f6ef18eaea188bdfdc048f89a48af82627a15a76fd53584975f28ab3cc39.hex")
+	boostTx = test.GetTestHex("./testing/tx/c5c7248302683107aa91014fd955908a7c572296e803512e497ddf7d1f458bd3.hex")
 }
 
 // TestNewFromBytes tests for nil case in NewFromBytes()
@@ -619,6 +620,22 @@ func TestTx_ToString2(t *testing.T) {
 
 }
 
+// Test Boost
+
+func TestTx_Boost(t *testing.T) {
+	// import a tx from hex
+	goBobTx, err := NewFromRawTxString(boostTx)
+	assert.NoError(t, err)
+
+	if _, err = goBobTx.ToString(); err != nil {
+		fmt.Printf("error occurred: %s", err.Error())
+	}
+	assert.NoError(t, err)
+
+	assert.Equal(t, 89, len(goBobTx.Out[0].Tape[0].Cell))
+}
+
+// c5c7248302683107aa91014fd955908a7c572296e803512e497ddf7d1f458bd3
 // BenchmarkTx_ToString benchmarks the method ToString()
 func BenchmarkTx_ToString(b *testing.B) {
 	bobTx, _ := NewFromString(sampleBobTx)

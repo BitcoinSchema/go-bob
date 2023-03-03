@@ -160,6 +160,7 @@ func (t *Tx) FromRawTxString(rawTxString string) (err error) {
 			Token: &bpu.Token{
 				S: &separator,
 			},
+			Require: &opReturn,
 		},
 	}
 
