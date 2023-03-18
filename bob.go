@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bitcoinschema/go-bob/util"
 	"github.com/bitcoinschema/go-bpu"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
@@ -63,6 +62,9 @@ func NewFromString(line string) (bobTx *Tx, err error) {
 func NewFromTx(tx *bt.Tx) (bobTx *Tx, err error) {
 	bobTx = new(Tx)
 	err = bobTx.FromTx(tx)
+	if err != nil {
+		return nil, err
+	}
 	return
 }
 
@@ -181,171 +183,41 @@ func (t *Tx) FromString(line string) (err error) {
 // FromTx takes a bt.Tx
 func (t *Tx) FromTx(tx *bt.Tx) error {
 
-	// Set the transaction ID
-	t.Tx.H = tx.TxID()
-
-	// Set the inputs
-	for inIdx, i := range tx.Inputs {
-
-		cellHex := hex.EncodeToString(i.Bytes(false))
-		cellB64 := base64.RawStdEncoding.EncodeToString(i.Bytes(false))
-		cellStr := i.String()
-		txid := hex.EncodeToString(i.PreviousTxID())
-
-		bobInput := bpu.Input{
-			XPut: bpu.XPut{
-				I: uint8(inIdx),
-				Tape: []bpu.Tape{{
-					Cell: []bpu.Cell{{
-						H: &cellHex,
-						B: &cellB64,
-						S: &cellStr,
-					}},
-					I: 0,
-				}},
-				E: bpu.E{
-					H: &txid,
-				},
+	if tx == nil {
+		return fmt.Errorf("Tx must be set")
+	}
+	var separator = "|"
+	var l = bpu.IncludeL
+	var opReturn = uint8(106)
+	var opFalse = uint8(0)
+	var splitConfig = []bpu.SplitConfig{
+		{
+			Token: &bpu.Token{
+				Op: &opReturn,
 			},
-		}
-
-		t.In = append(t.In, bobInput)
+			Include: &l,
+		},
+		{
+			Token: &bpu.Token{
+				Op: &opFalse,
+			},
+			Include: &l,
+		},
+		{
+			Token: &bpu.Token{
+				S: &separator,
+			},
+			Require: &opReturn,
+		},
 	}
 
-	// Process outputs
-	for idxOut, o := range tx.Outputs {
-		var adr string
-
-		// Try to get a pub_key hash (ignore fail when this is not a locking script)
-		outPubKeyHash, _ := o.LockingScript.PublicKeyHash()
-		if len(outPubKeyHash) > 0 {
-			outAddress, err := bscript.NewAddressFromPublicKeyHash(outPubKeyHash, true)
-			if err != nil {
-				return fmt.Errorf("failed to get address from pubkeyhash %x: %w", outPubKeyHash, err)
-			}
-			adr = outAddress.AddressString
-		}
-
-		// Initialize out tapes and locking script asm
-		asm, err := o.LockingScript.ToASM()
-		if err != nil {
-			return err
-		}
-
-		pushDatas := strings.Split(asm, " ")
-
-		var outTapes []bpu.Tape
-		bobOutput := bpu.Output{
-			XPut: bpu.XPut{
-				I:    uint8(idxOut),
-				Tape: outTapes,
-				E: bpu.E{
-					A: &adr,
-				},
-			},
-		}
-
-		var opTape bpu.Tape
-		var currentTape bpu.Tape
-		var opOffset = 0
-		if len(pushDatas) > 0 {
-
-			// Check for OP_RETURN or OP_FALSE + OP_RETURN
-			// Look for OP_FALSE OP_RETURN or just OP_RETURN and separate into a cell collection
-			if len(pushDatas[0]) > 0 {
-				if pushDatas[0] == "OP_FALSE" || pushDatas[0] == "0" {
-					// OP_FALSE in position 0
-					var op = bscript.OpFALSE
-					var ops = "OP_FALSE"
-					opTape.Cell = append(opTape.Cell, bpu.Cell{
-						Op:  &op,
-						Ops: &ops,
-						I:   uint8(idxOut),
-						II:  uint8(0),
-					})
-					opOffset++
-					// Check for OP_RETURN
-					if len(pushDatas[1]) > 0 && pushDatas[1] == "OP_RETURN" {
-						// OP_FALSE OP_RETURN
-						var op = bscript.OpRETURN
-						var ops = "OP_RETURN"
-						opTape.Cell = append(opTape.Cell, bpu.Cell{
-							Op:  &op,
-							Ops: &ops,
-							I:   uint8(idxOut),
-							II:  uint8(1),
-						})
-						// pull them out into their own cell collection
-						outTapes = append(outTapes, opTape)
-						opOffset++
-
-					}
-				} else if len(pushDatas[0]) > 0 && pushDatas[0] == "OP_RETURN" {
-					var op = bscript.OpRETURN
-					var ops = "OP_RETURN"
-					opTape.Cell = append(opTape.Cell, bpu.Cell{
-						Op:  &op,
-						Ops: &ops,
-						I:   uint8(idxOut),
-						II:  uint8(0),
-					})
-					opOffset++
-
-					// OP_RETURN in position 0
-				}
-				if opOffset > 0 {
-					outTapes = append(outTapes, opTape)
-				}
-			}
-			for pdIdx, pushData := range pushDatas {
-				if pdIdx < opOffset {
-					continue
-				}
-				// Ignore error if it fails, use empty
-				pushDataBytes, _ := hex.DecodeString(pushData)
-				b64String := base64.StdEncoding.EncodeToString(pushDataBytes)
-				var pushDataString = string(pushDataBytes)
-
-				// assume the pushdata is a chunk of
-				pushDataHex := pushData
-				var op uint8
-				var ops string
-				// asm is being put into the hex field - need to convert back to hex from opcodes if they exist in here
-				if pushDataByte, ok := util.OpCodeStrings[pushData]; ok {
-					// this pushdata is a valid opcode
-					pushDataHex = hex.EncodeToString([]byte{pushDataByte})
-					op = pushDataByte
-					ops = pushData
-				}
-				if pushData != ProtocolDelimiterAsm {
-					currentTape.Cell = append(currentTape.Cell, bpu.Cell{
-						Op:  &op,
-						Ops: &ops,
-						B:   &b64String,
-						H:   &pushDataHex,
-						S:   &pushDataString,
-						I:   uint8(idxOut),
-						II:  uint8(pdIdx - opOffset),
-					})
-				}
-				// Note: OP_SWAP is 0x7c which is also ascii "|" which is our protocol separator.
-				// This is not used as OP_SWAP at all since this is in the script after the OP_FALSE
-				// if "OP_RETURN" == pushData || ProtocolDelimiterAsm == pushData {
-				if ProtocolDelimiterAsm == pushData {
-					outTapes = append(outTapes, currentTape)
-					currentTape = bpu.Tape{}
-					opOffset = 0
-				}
-			}
-		}
-
-		// Add the trailing tape
-		outTapes = append(outTapes, currentTape)
-		bobOutput.Tape = outTapes
-
-		t.Out = append(t.Out, bobOutput)
+	bpuTx, err := bpu.Parse(bpu.ParseConfig{Tx: tx, SplitConfig: splitConfig})
+	if err != nil {
+		return err
 	}
-
+	if bpuTx != nil {
+		t.BpuTx = *bpuTx
+	}
 	return nil
 }
 

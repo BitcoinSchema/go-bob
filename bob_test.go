@@ -419,16 +419,12 @@ func BenchmarkNewFromTx(b *testing.B) {
 	}
 }
 
-// TestNewFromTxPanic tests for nil case in NewFromTx()
-func TestNewFromTxPanic(t *testing.T) {
+// TestNewFromTx2 tests for nil case in NewFromTx()
+func TestNewFromTx2(t *testing.T) {
 	t.Parallel()
-
-	assert.Panics(t, func() {
-		b, err := NewFromTx(nil)
-		assert.NoError(t, err)
-		assert.NotNil(t, b)
-		_, _ = b.ToRawTxString()
-	})
+	b, err := NewFromTx(nil)
+	assert.Error(t, err)
+	assert.Nil(t, b)
 }
 
 // TestTx_ToTx tests for nil case in ToTx()
