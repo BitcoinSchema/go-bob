@@ -164,7 +164,7 @@ func (t *Tx) FromRawTxString(rawTxString string) (err error) {
 		},
 	}
 
-	bpuTx, err := bpu.Parse(bpu.ParseConfig{RawTxHex: rawTxString, SplitConfig: splitConfig})
+	bpuTx, err := bpu.Parse(bpu.ParseConfig{RawTxHex: &rawTxString, SplitConfig: splitConfig})
 	if bpuTx != nil {
 		t.BpuTx = *bpuTx
 	}
