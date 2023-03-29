@@ -11,7 +11,7 @@ require (
 require github.com/kr/pretty v0.3.1 // indirect
 
 require (
-	github.com/bitcoinschema/go-bpu v0.0.7
+	github.com/bitcoinschema/go-bpu v0.0.8
 	github.com/bitcoinsv/bsvd v0.0.0-20190609155523-4c29707f7173 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/libsv/go-bk v0.1.6 // indirect
