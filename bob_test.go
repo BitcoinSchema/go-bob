@@ -645,6 +645,7 @@ func TestTx_HugeOrd(t *testing.T) {
 	assert.Equal(t, 14, len(goBobTx.Out[0].Tape[0].Cell))
 	assert.Equal(t, 2, len(goBobTx.Out[0].Tape))
 	assert.Equal(t, 1437, len(goBobTx.Out))
+
 }
 
 // c5c7248302683107aa91014fd955908a7c572296e803512e497ddf7d1f458bd3
