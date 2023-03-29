@@ -632,6 +632,26 @@ func TestTx_Boost(t *testing.T) {
 }
 
 // Test HugeOrd
+func TestRawTxString_HugeOrd(t *testing.T) {
+	hugeOrdTx, err := bt.NewTxFromString(bigOrdTx)
+	assert.NoError(t, err)
+
+	// import a tx from hex
+	goBobTx, err := NewFromTx(hugeOrdTx)
+	assert.NoError(t, err)
+
+	if _, err = goBobTx.ToString(); err != nil {
+		fmt.Printf("error occurred: %s", err.Error())
+	}
+	assert.NoError(t, err)
+
+	assert.Equal(t, 14, len(goBobTx.Out[0].Tape[0].Cell))
+	assert.Equal(t, 2, len(goBobTx.Out[0].Tape))
+	assert.Equal(t, 1437, len(goBobTx.Out))
+
+}
+
+// Test HugeOrd From Tx
 func TestTx_HugeOrd(t *testing.T) {
 	// import a tx from hex
 	goBobTx, err := NewFromRawTxString(bigOrdTx)

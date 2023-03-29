@@ -190,17 +190,10 @@ func (t *Tx) FromTx(tx *bt.Tx) error {
 	var separator = "|"
 	var l = bpu.IncludeL
 	var opReturn = uint8(106)
-	var opFalse = uint8(0)
 	var splitConfig = []bpu.SplitConfig{
 		{
 			Token: &bpu.Token{
 				Op: &opReturn,
-			},
-			Include: &l,
-		},
-		{
-			Token: &bpu.Token{
-				Op: &opFalse,
 			},
 			Include: &l,
 		},
