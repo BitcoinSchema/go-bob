@@ -157,6 +157,7 @@ func (t *Tx) FromRawTxString(rawTxString string) (err error) {
 				Op: &opFalse,
 			},
 			Include: &l,
+			Require: &opReturn,
 		},
 		{
 			Token: &bpu.Token{
