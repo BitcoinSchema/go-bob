@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/bitcoinschema/go-bitcoin/v2 v2.0.3
-	github.com/libsv/go-bt/v2 v2.2.0
+	github.com/libsv/go-bt/v2 v2.2.1
 	github.com/stretchr/testify v1.8.2
 )
 
