@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/bitcoinschema/go-bitcoin/v2 v2.0.3
 	github.com/libsv/go-bt/v2 v2.2.1
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 )
 
 require github.com/rogpeppe/go-internal v1.9.0 // indirect
