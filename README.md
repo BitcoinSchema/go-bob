@@ -59,15 +59,16 @@ View the generated [documentation](https://pkg.go.dev/github.com/bitcoinschema/g
 <summary><strong><code>Package Dependencies</code></strong></summary>
 <br/>
 
-- [bitcoinschema/go-bitcoin](https://github.com/bitcoinschema/go-bitcoin/v2)
-- [libsv/go-bt](https://github.com/libsv/go-bt/v2)
+- [bitcoinschema/go-bitcoin](https://github.com/bitcoinschema/go-bitcoin)
+- [bitcoinschema/go-bpu](https://github.com/bitcoinschema/go-bpu)
+- [libsv/go-bt](https://github.com/libsv/go-bt)
 </details>
 
 <details>
 <summary><strong><code>Library Deployment</code></strong></summary>
 <br/>
 
-[goreleaser](https://github.com/goreleaser/goreleaser) for easy binary or library deployment to Github and can be installed via: `brew install goreleaser`.
+[goreleaser](https://github.com/goreleaser/goreleaser) for easy binary or library deployment to GitHub and can be installed via: `brew install goreleaser`.
 
 The [.goreleaser.yml](.goreleaser.yml) file is used to configure [goreleaser](https://github.com/goreleaser/goreleaser).
 
@@ -100,7 +101,7 @@ install               Install the application
 install-go            Install the application (Using Native Go)
 install-releaser      Install the GoReleaser application
 lint                  Run the golangci-lint application (install if not found)
-release               Full production release (creates release in Github)
+release               Full production release (creates release in GitHub)
 release               Runs common.release then runs godocs
 release-snap          Test the full release (build binaries)
 release-test          Full production test release (everything except deploy)
@@ -126,7 +127,7 @@ vet                   Run the Go vet application
 
 ## Examples & Tests
 
-All unit tests and [examples](examples) run via [Github Actions](https://github.com/BitcoinSchema/go-bob/actions) and
+All unit tests and [examples](examples) run via [GitHub Actions](https://github.com/BitcoinSchema/go-bob/actions) and
 uses [Go version 1.19.x](https://golang.org/doc/go1.19). View the [configuration file](.github/workflows/run-tests.yml).
 
 Run all tests (including integration tests)
