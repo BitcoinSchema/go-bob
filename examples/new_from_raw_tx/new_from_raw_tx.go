@@ -38,5 +38,5 @@ func main() {
 	if err != nil {
 		log.Fatalf("error occurred: %s", err.Error())
 	}
-	log.Printf("found tx: %s", b.Tx.H)
+	log.Printf("found tx: %s", b.Tx.Tx.H)
 }
