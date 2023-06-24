@@ -68,22 +68,22 @@ func TestNewFromBytes(t *testing.T) {
 	var b *Tx
 	var err error
 
-	for _, test := range tests {
-		if b, err = NewFromBytes(test.inputLine); err != nil && !test.expectedError {
-			t.Errorf("%s Failed: [%v] inputted and error not expected but got: %s", t.Name(), test.inputLine, err.Error())
-		} else if err == nil && test.expectedError {
-			t.Errorf("%s Failed: [%v] inputted and error was expected", t.Name(), test.inputLine)
-		} else if b == nil && !test.expectedNil {
-			t.Errorf("%s Failed: [%v] inputted and nil was not expected", t.Name(), test.inputLine)
-		} else if b != nil && test.expectedNil {
-			t.Errorf("%s Failed: [%v] inputted and nil was expected", t.Name(), test.inputLine)
+	for _, theTest := range tests {
+		if b, err = NewFromBytes(theTest.inputLine); err != nil && !theTest.expectedError {
+			t.Errorf("%s Failed: [%v] inputted and error not expected but got: %s", t.Name(), theTest.inputLine, err.Error())
+		} else if err == nil && theTest.expectedError {
+			t.Errorf("%s Failed: [%v] inputted and error was expected", t.Name(), theTest.inputLine)
+		} else if b == nil && !theTest.expectedNil {
+			t.Errorf("%s Failed: [%v] inputted and nil was not expected", t.Name(), theTest.inputLine)
+		} else if b != nil && theTest.expectedNil {
+			t.Errorf("%s Failed: [%v] inputted and nil was expected", t.Name(), theTest.inputLine)
 		} else if b != nil {
 
 			var str string
 			str, err = b.ToRawTxString()
 			assert.NoError(t, err)
-			assert.Equal(t, test.expectedTxString, str)
-			assert.Equal(t, test.expectedTxHash, b.Tx.H)
+			assert.Equal(t, theTest.expectedTxString, str)
+			assert.Equal(t, theTest.expectedTxHash, b.Tx.Tx.H)
 		}
 	}
 }
@@ -95,7 +95,7 @@ func ExampleNewFromBytes() {
 		fmt.Printf("error occurred: %s", err.Error())
 		return
 	}
-	fmt.Printf("found tx: %s", b.Tx.H)
+	fmt.Printf("found tx: %s", b.Tx.Tx.H)
 	// Output:found tx: 207eaadc096849e037b8944df21a8bba6d91d8445848db047c0a3f963121e19d
 }
 
@@ -159,22 +159,22 @@ func TestNewFromString(t *testing.T) {
 	// Run tests
 	var b *Tx
 	var err error
-	for _, test := range tests {
-		if b, err = NewFromString(test.inputLine); err != nil && !test.expectedError {
-			t.Errorf("%s Failed: [%v] inputted and error not expected but got: %s", t.Name(), test.inputLine, err.Error())
-		} else if err == nil && test.expectedError {
-			t.Errorf("%s Failed: [%v] inputted and error was expected", t.Name(), test.inputLine)
-		} else if b == nil && !test.expectedNil {
-			t.Errorf("%s Failed: [%v] inputted and nil was not expected", t.Name(), test.inputLine)
-		} else if b != nil && test.expectedNil {
-			t.Errorf("%s Failed: [%v] inputted and nil was expected", t.Name(), test.inputLine)
+	for _, theTest := range tests {
+		if b, err = NewFromString(theTest.inputLine); err != nil && !theTest.expectedError {
+			t.Errorf("%s Failed: [%v] inputted and error not expected but got: %s", t.Name(), theTest.inputLine, err.Error())
+		} else if err == nil && theTest.expectedError {
+			t.Errorf("%s Failed: [%v] inputted and error was expected", t.Name(), theTest.inputLine)
+		} else if b == nil && !theTest.expectedNil {
+			t.Errorf("%s Failed: [%v] inputted and nil was not expected", t.Name(), theTest.inputLine)
+		} else if b != nil && theTest.expectedNil {
+			t.Errorf("%s Failed: [%v] inputted and nil was expected", t.Name(), theTest.inputLine)
 		} else if b != nil {
 
 			var str string
 			str, err = b.ToRawTxString()
 			assert.NoError(t, err)
-			assert.Equal(t, test.expectedTxString, str)
-			assert.Equal(t, test.expectedTxHash, b.Tx.H)
+			assert.Equal(t, theTest.expectedTxString, str)
+			assert.Equal(t, theTest.expectedTxHash, b.Tx.Tx.H)
 		}
 	}
 }
@@ -186,7 +186,7 @@ func ExampleNewFromString() {
 		fmt.Printf("error occurred: %s", err.Error())
 		return
 	}
-	fmt.Printf("found tx: %s", b.Tx.H)
+	fmt.Printf("found tx: %s", b.Tx.Tx.H)
 	// Output:found tx: 207eaadc096849e037b8944df21a8bba6d91d8445848db047c0a3f963121e19d
 }
 
@@ -253,22 +253,22 @@ func TestNewFromRawTxString(t *testing.T) {
 	// Run tests
 	var b *Tx
 	var err error
-	for _, test := range tests {
-		if b, err = NewFromRawTxString(test.inputLine); err != nil && !test.expectedError {
-			t.Errorf("%s Failed: [%v] inputted and error not expected but got: %s", t.Name(), test.inputLine, err.Error())
-		} else if err == nil && test.expectedError {
-			t.Errorf("%s Failed: [%v] inputted and error was expected", t.Name(), test.inputLine)
-		} else if b == nil && !test.expectedNil {
-			t.Errorf("%s Failed: [%v] inputted and nil was not expected", t.Name(), test.inputLine)
-		} else if b != nil && test.expectedNil {
-			t.Errorf("%s Failed: [%v] inputted and nil was expected", t.Name(), test.inputLine)
+	for _, theTest := range tests {
+		if b, err = NewFromRawTxString(theTest.inputLine); err != nil && !theTest.expectedError {
+			t.Errorf("%s Failed: [%v] inputted and error not expected but got: %s", t.Name(), theTest.inputLine, err.Error())
+		} else if err == nil && theTest.expectedError {
+			t.Errorf("%s Failed: [%v] inputted and error was expected", t.Name(), theTest.inputLine)
+		} else if b == nil && !theTest.expectedNil {
+			t.Errorf("%s Failed: [%v] inputted and nil was not expected", t.Name(), theTest.inputLine)
+		} else if b != nil && theTest.expectedNil {
+			t.Errorf("%s Failed: [%v] inputted and nil was expected", t.Name(), theTest.inputLine)
 		} else if b != nil {
 
 			var str string
 			str, err = b.ToRawTxString()
 			assert.NoError(t, err)
-			assert.Equal(t, test.expectedTxString, str)
-			assert.Equal(t, test.expectedTxHash, b.Tx.H)
+			assert.Equal(t, theTest.expectedTxString, str)
+			assert.Equal(t, theTest.expectedTxHash, b.Tx.Tx.H)
 		}
 	}
 }
@@ -294,7 +294,7 @@ func ExampleNewFromRawTxString() {
 		fmt.Printf("error occurred: %s", err.Error())
 		return
 	}
-	fmt.Printf("found tx: %s", b.Tx.H)
+	fmt.Printf("found tx: %s", b.Tx.Tx.H)
 	// Output:found tx: 9ec47d91ff11edb62f337dc828c52e39072d1a5a2f1b180bbfae9c3279d81a7c
 }
 
@@ -356,22 +356,22 @@ func TestNewFromTx(t *testing.T) {
 	// Run tests
 	var b *Tx
 	var err error
-	for _, test := range tests {
-		if b, err = NewFromTx(test.inputTx); err != nil && !test.expectedError {
-			t.Errorf("%s Failed: [%v] inputted and error not expected but got: %s", t.Name(), test.inputTx, err.Error())
-		} else if err == nil && test.expectedError {
-			t.Errorf("%s Failed: [%v] inputted and error was expected", t.Name(), test.inputTx)
-		} else if b == nil && !test.expectedNil {
-			t.Errorf("%s Failed: [%v] inputted and nil was not expected", t.Name(), test.inputTx)
-		} else if b != nil && test.expectedNil {
-			t.Errorf("%s Failed: [%v] inputted and nil was expected", t.Name(), test.inputTx)
+	for _, theTest := range tests {
+		if b, err = NewFromTx(theTest.inputTx); err != nil && !theTest.expectedError {
+			t.Errorf("%s Failed: [%v] inputted and error not expected but got: %s", t.Name(), theTest.inputTx, err.Error())
+		} else if err == nil && theTest.expectedError {
+			t.Errorf("%s Failed: [%v] inputted and error was expected", t.Name(), theTest.inputTx)
+		} else if b == nil && !theTest.expectedNil {
+			t.Errorf("%s Failed: [%v] inputted and nil was not expected", t.Name(), theTest.inputTx)
+		} else if b != nil && theTest.expectedNil {
+			t.Errorf("%s Failed: [%v] inputted and nil was expected", t.Name(), theTest.inputTx)
 		} else if b != nil {
 
 			var str string
 			str, err = b.ToRawTxString()
 			assert.NoError(t, err)
-			assert.Equal(t, test.expectedTxString, str)
-			assert.Equal(t, test.expectedTxHash, b.Tx.H)
+			assert.Equal(t, theTest.expectedTxString, str)
+			assert.Equal(t, theTest.expectedTxHash, b.Tx.Tx.H)
 		}
 	}
 }
@@ -382,7 +382,7 @@ func TestNewFromTxString(t *testing.T) {
 
 	bobTxFromString, err := NewFromRawTxString(testHex)
 	if err != nil {
-		t.Fatalf("error occurred1: %s", err.Error())
+		t.Fatalf("error occurred: %s", err.Error())
 	}
 
 	bapOut := &bobTxFromString.Out[0].Tape[1]
@@ -408,7 +408,7 @@ func ExampleNewFromTx() {
 		fmt.Printf("error occurred: %s", err.Error())
 		return
 	}
-	fmt.Printf("found tx: %s", b.Tx.H)
+	fmt.Printf("found tx: %s", b.Tx.Tx.H)
 	// Output:found tx: f94e4adeac0cee5e9ff9985373622db9524e9f98d465dc024f85aec8acfeaf16
 }
 
@@ -462,7 +462,7 @@ func TestTx_ToTx(t *testing.T) {
 
 	assert.Equal(t, *bobTx.Out[0].Tape[0].Cell[0].Op, outParts[0][0])
 
-	assert.Equal(t, bobTx.Tx.H, tx.TxID())
+	assert.Equal(t, bobTx.Tx.Tx.H, tx.TxID())
 }
 
 // ExampleTx_ToTx example using ToTx()
@@ -558,7 +558,7 @@ func Test_GoBT_ASM(t *testing.T) {
 
 }
 
-// Test parity with bmapjs]
+// Test parity with bmapjs
 func TestBob_Vs_Bob(t *testing.T) {
 	bmapjsTx, _ := NewFromString(parityBob)
 	// import a tx from hex
@@ -579,7 +579,7 @@ func TestBob_Vs_Bob(t *testing.T) {
 
 	// assert.Equal(t, len(bmapjsTx.Out[1].Tape), len(goBobTx.Out[1].Tape))
 	// assert.Equal(t, len(bmapjsTx.Out[1].Tape[0].Cell), len(goBobTx.Out[1].Tape[0].Cell))
-	assert.Equal(t, bmapjsTx.Tx.H, goBobTx.Tx.H)
+	assert.Equal(t, bmapjsTx.Tx.Tx.H, goBobTx.Tx.Tx.H)
 }
 
 // TestTx_ToString tests for nil case in ToString()
@@ -600,7 +600,7 @@ func TestTx_ToString(t *testing.T) {
 	assert.NoError(t, err)
 
 	// check txid match
-	assert.Equal(t, bobTx.Tx.H, otherBob.Tx.H)
+	assert.Equal(t, bobTx.Tx.Tx.H, otherBob.Tx.Tx.H)
 }
 
 // TestTx_ToString2 example using ToString()
