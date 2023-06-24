@@ -33,7 +33,7 @@ const (
 //
 // DO NOT CHANGE ORDER - aligned for memory optimization (malign)
 type Tx struct {
-	bpu.BpuTx
+	bpu.Tx
 }
 
 // NewFromBytes creates a new BOB Tx from a NDJSON line representing a BOB transaction,
@@ -70,7 +70,7 @@ func NewFromTx(tx *bt.Tx) (bobTx *Tx, err error) {
 
 // FromBytes takes a BOB formatted tx string as bytes
 func (t *Tx) FromBytes(line []byte) error {
-	tu := new(bpu.BpuTx)
+	tu := new(bpu.Tx)
 	if err := json.Unmarshal(line, &tu); err != nil {
 		return fmt.Errorf("error parsing line: %v, %w", line, err)
 	}
@@ -100,7 +100,8 @@ func (t *Tx) FromBytes(line []byte) error {
 	t.In = tu.In
 	t.Lock = tu.Lock
 	t.Out = fixedOuts
-	t.Tx = tu.Tx
+
+	t.Tx.Tx = tu.Tx
 
 	// Check for missing hex values and supply them
 	for outIdx, out := range t.Out {
@@ -169,7 +170,7 @@ func (t *Tx) FromRawTxString(rawTxString string) (err error) {
 
 	bpuTx, err := bpu.Parse(bpu.ParseConfig{RawTxHex: &rawTxString, SplitConfig: splitConfig})
 	if bpuTx != nil {
-		t.BpuTx = *bpuTx
+		t.Tx = *bpuTx
 	}
 
 	return
@@ -210,7 +211,7 @@ func (t *Tx) FromTx(tx *bt.Tx) error {
 		return err
 	}
 	if bpuTx != nil {
-		t.BpuTx = *bpuTx
+		t.Tx = *bpuTx
 	}
 	return nil
 }
