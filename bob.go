@@ -36,6 +36,11 @@ type Tx struct {
 	bpu.Tx
 }
 
+// used by bpu.Parse to determine if the parsing should be shallow or deep
+// always using shallow since it covers 99.99% of cases and elimintates
+// bottlenecking on txs with lots of pushdatas (like complex sCrypt contracts)
+var shallowMode = bpu.Shallow
+
 // NewFromBytes creates a new BOB Tx from a NDJSON line representing a BOB transaction,
 // as returned by the bitbus 2 API
 func NewFromBytes(line []byte) (bobTx *Tx, err error) {
@@ -145,7 +150,6 @@ func (t *Tx) FromRawTxString(rawTxString string) (err error) {
 	var l = bpu.IncludeL
 	var opReturn = uint8(106)
 	var opFalse = uint8(0)
-
 	var splitConfig = []bpu.SplitConfig{
 		{
 			Token: &bpu.Token{
@@ -168,7 +172,7 @@ func (t *Tx) FromRawTxString(rawTxString string) (err error) {
 		},
 	}
 
-	bpuTx, err := bpu.Parse(bpu.ParseConfig{RawTxHex: &rawTxString, SplitConfig: splitConfig})
+	bpuTx, err := bpu.Parse(bpu.ParseConfig{RawTxHex: &rawTxString, SplitConfig: splitConfig, Mode: &shallowMode})
 	if bpuTx != nil {
 		t.Tx = *bpuTx
 	}
@@ -206,7 +210,7 @@ func (t *Tx) FromTx(tx *bt.Tx) error {
 		},
 	}
 
-	bpuTx, err := bpu.Parse(bpu.ParseConfig{Tx: tx, SplitConfig: splitConfig})
+	bpuTx, err := bpu.Parse(bpu.ParseConfig{Tx: tx, SplitConfig: splitConfig, Mode: &shallowMode})
 	if err != nil {
 		return err
 	}
