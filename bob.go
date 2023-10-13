@@ -37,7 +37,7 @@ type Tx struct {
 }
 
 // used by bpu.Parse to determine if the parsing should be shallow or deep
-// always using shallow since it covers 99.99% of cases and elimintates
+// always using shallow since it covers 99.99% of cases and eliminates
 // bottlenecking on txs with lots of pushdatas (like complex sCrypt contracts)
 var shallowMode = bpu.Shallow
 
