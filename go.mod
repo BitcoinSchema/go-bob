@@ -6,7 +6,7 @@ require (
 	github.com/bitcoinschema/go-bitcoin/v2 v2.0.5
 	github.com/bitcoinschema/go-bpu v0.1.3
 	github.com/libsv/go-bt/v2 v2.2.5
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 )
 
 require (
