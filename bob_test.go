@@ -7,10 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bitcoinschema/go-bitcoin/v2"
+	"github.com/bitcoin-sv/go-sdk/script"
+	"github.com/bitcoin-sv/go-sdk/transaction"
 	test "github.com/bitcoinschema/go-bob/testing"
-	"github.com/libsv/go-bt/v2"
-	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -305,17 +304,17 @@ func BenchmarkNewFromRawTxString(b *testing.B) {
 	}
 }
 
-func testExampleTx() (*bt.Tx, error) {
-	pk := "80699541455b59a8a8a33b85892319de8b8e8944eb8b48e9467137825ae192e59f01"
+func testExampleTx() (*transaction.Transaction, error) {
+	tx := transaction.NewTransaction()
+	s := script.NewFromBytes([]byte{})
+	s.AppendOpcodes(script.OpFALSE, script.OpRETURN)
+	s.AppendPushDataArray([][]byte{[]byte("prefix1"), []byte("example data"), []byte{0x13, 0x37}, []byte{0x7c}, []byte("prefix2"), []byte("example data 2")})
 
-	privateKey, err := bitcoin.PrivateKeyFromString(pk)
-	if err != nil {
-		return nil, err
-	}
-
-	opReturn1 := bitcoin.OpReturnData{[]byte("prefix1"), []byte("example data"), []byte{0x13, 0x37}, []byte{0x7c}, []byte("prefix2"), []byte("example data 2")}
-
-	return bitcoin.CreateTx(nil, nil, []bitcoin.OpReturnData{opReturn1}, privateKey)
+	tx.AddOutput(&transaction.TransactionOutput{
+		LockingScript: s,
+		Satoshis:      0,
+	})
+	return tx, nil
 }
 
 // TestNewFromTx tests for nil case in NewFromTx()
@@ -329,14 +328,14 @@ func TestNewFromTx(t *testing.T) {
 	var (
 		// Testing private methods
 		tests = []struct {
-			inputTx          *bt.Tx
+			inputTx          *transaction.Transaction
 			expectedTxString string
 			expectedTxHash   string
 			expectedNil      bool
 			expectedError    bool
 		}{
 			{
-				&bt.Tx{},
+				&transaction.Transaction{},
 				"01000000000000000000",
 				"f702453dd03b0f055e5437d76128141803984fb10acb85fc3b2184fae2f3fa78",
 				false,
@@ -433,11 +432,10 @@ func TestTx_ToTx(t *testing.T) {
 
 	bobTx, err := NewFromString(sampleBobTx)
 
-	fmt.Printf("error: %s", err)
 	assert.NoError(t, err)
 	assert.NotNil(t, bobTx)
 
-	var tx *bt.Tx
+	var tx *transaction.Transaction
 	tx, err = bobTx.ToTx()
 	assert.NoError(t, err)
 	assert.NotNil(t, tx)
@@ -447,22 +445,22 @@ func TestTx_ToTx(t *testing.T) {
 	assert.Equal(t, len(bobTx.In), len(tx.Inputs))
 	assert.Equal(t, len(bobTx.Out), len(tx.Outputs))
 
-	parts, err := bscript.DecodeParts(*tx.Inputs[0].UnlockingScript)
+	parts, err := script.DecodeScript(*tx.Inputs[0].UnlockingScript)
 	assert.NoError(t, err)
-	part0 := hex.EncodeToString(parts[0])
-	part1 := hex.EncodeToString(parts[1])
+	part0 := hex.EncodeToString(parts[0].Data)
+	part1 := hex.EncodeToString(parts[1].Data)
 	assert.Equal(t, *bobTx.In[0].Tape[0].Cell[0].H, part0)
 	assert.Equal(t, *bobTx.In[0].Tape[0].Cell[1].H, part1)
 
-	outParts, err := bscript.DecodeParts(*tx.Outputs[0].LockingScript)
+	outParts, err := script.DecodeScript(*tx.Outputs[0].LockingScript)
 	assert.NoError(t, err)
-	outPart1 := hex.EncodeToString(outParts[1])
+	outPart1 := hex.EncodeToString(outParts[1].Data)
 
 	log.Printf("%x ", outPart1)
 
-	assert.Equal(t, *bobTx.Out[0].Tape[0].Cell[0].Op, outParts[0][0])
+	assert.Equal(t, *bobTx.Out[0].Tape[0].Cell[0].Op, outParts[0].Op)
 
-	assert.Equal(t, bobTx.Tx.Tx.H, tx.TxID())
+	assert.Equal(t, bobTx.Tx.Tx.H, tx.TxID().String())
 }
 
 // ExampleTx_ToTx example using ToTx()
@@ -474,7 +472,7 @@ func ExampleTx_ToTx() {
 		return
 	}
 
-	var tx *bt.Tx
+	var tx *transaction.Transaction
 	if tx, err = bobTx.ToTx(); err != nil {
 		fmt.Printf("error occurred: %s", err.Error())
 		return
@@ -542,14 +540,11 @@ func Test_GoBT_ASM(t *testing.T) {
 		// assert.NotNil(t, goBobTx)
 		// assert.Nil(t, err)
 
-		btTx, err := bt.NewTxFromString(parityTx)
-
-		fmt.Printf("error %s", err)
+		btTx, err := transaction.NewTransactionFromHex(parityTx)
 		assert.Nil(t, err)
 		assert.NotNil(t, *btTx)
 
-		asmBt, err := btTx.Outputs[0].LockingScript.ToASM()
-		assert.Nil(t, err)
+		asmBt := btTx.Outputs[0].LockingScript.ToASM()
 
 		pushDatas := strings.Split(asmBt, " ")
 		assert.Equal(t, 10, len(pushDatas))
@@ -633,7 +628,7 @@ func TestTx_Boost(t *testing.T) {
 
 // Test HugeOrd
 func TestRawTxString_HugeOrd(t *testing.T) {
-	hugeOrdTx, err := bt.NewTxFromString(bigOrdTx)
+	hugeOrdTx, err := transaction.NewTransactionFromHex(bigOrdTx)
 	assert.NoError(t, err)
 
 	// import a tx from hex
