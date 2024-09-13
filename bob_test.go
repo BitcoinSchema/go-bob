@@ -10,7 +10,7 @@ import (
 	"github.com/bitcoin-sv/go-sdk/script"
 	"github.com/bitcoin-sv/go-sdk/transaction"
 	test "github.com/bitcoinschema/go-bob/testing"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var sampleBobTx, sampleBobTxBadStrings, rawBobTx, parityBob, parityTx, boostTx, bigOrdTx string
@@ -80,9 +80,9 @@ func TestNewFromBytes(t *testing.T) {
 
 			var str string
 			str, err = b.ToRawTxString()
-			assert.NoError(t, err)
-			assert.Equal(t, theTest.expectedTxString, str)
-			assert.Equal(t, theTest.expectedTxHash, b.Tx.Tx.H)
+			require.NoError(t, err)
+			require.Equal(t, theTest.expectedTxString, str)
+			require.Equal(t, theTest.expectedTxHash, b.Tx.Tx.H)
 		}
 	}
 }
@@ -110,10 +110,10 @@ func BenchmarkNewFromBytes(b *testing.B) {
 func TestNewFromBytesPanic(t *testing.T) {
 	t.Parallel()
 
-	assert.Panics(t, func() {
+	require.Panics(t, func() {
 		b, err := NewFromBytes([]byte(sampleBobTxBadStrings))
-		assert.NoError(t, err)
-		assert.NotNil(t, b)
+		require.NoError(t, err)
+		require.NotNil(t, b)
 		_, _ = b.ToRawTxString()
 	})
 }
@@ -171,9 +171,9 @@ func TestNewFromString(t *testing.T) {
 
 			var str string
 			str, err = b.ToRawTxString()
-			assert.NoError(t, err)
-			assert.Equal(t, theTest.expectedTxString, str)
-			assert.Equal(t, theTest.expectedTxHash, b.Tx.Tx.H)
+			require.NoError(t, err)
+			require.Equal(t, theTest.expectedTxString, str)
+			require.Equal(t, theTest.expectedTxHash, b.Tx.Tx.H)
 		}
 	}
 }
@@ -265,9 +265,9 @@ func TestNewFromRawTxString(t *testing.T) {
 
 			var str string
 			str, err = b.ToRawTxString()
-			assert.NoError(t, err)
-			assert.Equal(t, theTest.expectedTxString, str)
-			assert.Equal(t, theTest.expectedTxHash, b.Tx.Tx.H)
+			require.NoError(t, err)
+			require.Equal(t, theTest.expectedTxString, str)
+			require.Equal(t, theTest.expectedTxHash, b.Tx.Tx.H)
 		}
 	}
 }
@@ -304,7 +304,7 @@ func BenchmarkNewFromRawTxString(b *testing.B) {
 	}
 }
 
-func testExampleTx() (*transaction.Transaction, error) {
+func testExampleTx() *transaction.Transaction {
 	tx := transaction.NewTransaction()
 	s := script.NewFromBytes([]byte{})
 	s.AppendOpcodes(script.OpFALSE, script.OpRETURN)
@@ -314,16 +314,15 @@ func testExampleTx() (*transaction.Transaction, error) {
 		LockingScript: s,
 		Satoshis:      0,
 	})
-	return tx, nil
+	return tx
 }
 
 // TestNewFromTx tests for nil case in NewFromTx()
 func TestNewFromTx(t *testing.T) {
 	t.Parallel()
 
-	validTx, exampleErr := testExampleTx()
-	assert.NoError(t, exampleErr)
-	assert.NotNil(t, validTx)
+	validTx := testExampleTx()
+	require.NotNil(t, validTx)
 
 	var (
 		// Testing private methods
@@ -368,9 +367,9 @@ func TestNewFromTx(t *testing.T) {
 
 			var str string
 			str, err = b.ToRawTxString()
-			assert.NoError(t, err)
-			assert.Equal(t, theTest.expectedTxString, str)
-			assert.Equal(t, theTest.expectedTxHash, b.Tx.Tx.H)
+			require.NoError(t, err)
+			require.Equal(t, theTest.expectedTxString, str)
+			require.Equal(t, theTest.expectedTxHash, b.Tx.Tx.H)
 		}
 	}
 }
@@ -396,13 +395,10 @@ func TestNewFromTxString(t *testing.T) {
 // ExampleNewFromTx example using NewFromTx()
 func ExampleNewFromTx() {
 	// Use an example TX
-	exampleTx, err := testExampleTx()
-	if err != nil {
-		fmt.Printf("error occurred: %s", err.Error())
-		return
-	}
+	exampleTx := testExampleTx()
 
 	var b *Tx
+	var err error
 	if b, err = NewFromTx(exampleTx); err != nil {
 		fmt.Printf("error occurred: %s", err.Error())
 		return
@@ -413,7 +409,7 @@ func ExampleNewFromTx() {
 
 // BenchmarkNewFromTx benchmarks the method NewFromTx()
 func BenchmarkNewFromTx(b *testing.B) {
-	exampleTx, _ := testExampleTx()
+	exampleTx := testExampleTx()
 	for i := 0; i < b.N; i++ {
 		_, _ = NewFromTx(exampleTx)
 	}
@@ -423,8 +419,8 @@ func BenchmarkNewFromTx(b *testing.B) {
 func TestNewFromTx2(t *testing.T) {
 	t.Parallel()
 	b, err := NewFromTx(nil)
-	assert.Error(t, err)
-	assert.Nil(t, b)
+	require.Error(t, err)
+	require.Nil(t, b)
 }
 
 // TestTx_ToTx tests for nil case in ToTx()
@@ -432,35 +428,35 @@ func TestTx_ToTx(t *testing.T) {
 
 	bobTx, err := NewFromString(sampleBobTx)
 
-	assert.NoError(t, err)
-	assert.NotNil(t, bobTx)
+	require.NoError(t, err)
+	require.NotNil(t, bobTx)
 
 	var tx *transaction.Transaction
 	tx, err = bobTx.ToTx()
-	assert.NoError(t, err)
-	assert.NotNil(t, tx)
+	require.NoError(t, err)
+	require.NotNil(t, tx)
 
 	// check that they have same number of ins and outs
 
-	assert.Equal(t, len(bobTx.In), len(tx.Inputs))
-	assert.Equal(t, len(bobTx.Out), len(tx.Outputs))
+	require.Equal(t, len(bobTx.In), len(tx.Inputs))
+	require.Equal(t, len(bobTx.Out), len(tx.Outputs))
 
 	parts, err := script.DecodeScript(*tx.Inputs[0].UnlockingScript)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	part0 := hex.EncodeToString(parts[0].Data)
 	part1 := hex.EncodeToString(parts[1].Data)
-	assert.Equal(t, *bobTx.In[0].Tape[0].Cell[0].H, part0)
-	assert.Equal(t, *bobTx.In[0].Tape[0].Cell[1].H, part1)
+	require.Equal(t, *bobTx.In[0].Tape[0].Cell[0].H, part0)
+	require.Equal(t, *bobTx.In[0].Tape[0].Cell[1].H, part1)
 
 	outParts, err := script.DecodeScript(*tx.Outputs[0].LockingScript)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	outPart1 := hex.EncodeToString(outParts[1].Data)
 
 	log.Printf("%x ", outPart1)
 
-	assert.Equal(t, *bobTx.Out[0].Tape[0].Cell[0].Op, outParts[0].Op)
+	require.Equal(t, *bobTx.Out[0].Tape[0].Cell[0].Op, outParts[0].Op)
 
-	assert.Equal(t, bobTx.Tx.Tx.H, tx.TxID().String())
+	require.Equal(t, bobTx.Tx.Tx.H, tx.TxID().String())
 }
 
 // ExampleTx_ToTx example using ToTx()
@@ -493,15 +489,15 @@ func BenchmarkTx_ToTx(b *testing.B) {
 // TestTx_ToRawTxString tests for nil case in ToRawTxString()
 func TestTx_ToRawTxString(t *testing.T) {
 	bobTx, err := NewFromString(sampleBobTx)
-	assert.NoError(t, err)
-	assert.NotNil(t, bobTx)
+	require.NoError(t, err)
+	require.NotNil(t, bobTx)
 
 	testTx := "0100000001f15a9d3c550c14e12ca066ad09edff31432f1e9f45894ecff5b70c8354c81f3d010000006b483045022100f012c3bd3781091aa8e53cab2ffcb90acced8c65500b41086fd225e48c98c1d702200b8ff117b8ecd2b2d7e95551bc5a1b3bbcca8049864479a28bed9dc842a86804412103ef5bb22964d529c0af748d9a6381432f05298e7a66ed2fe22e7975b1502528a7ffffffff0200000000000000001f006a15e4b880e781afe883bde999a4e58d83e5b9b4e69a970635386135393733b30100000000001976a9149c63715c6d1fa6c61b31d2911516e1c3db3bdfa888ac00000000"
 
 	var rawTx string
 	rawTx, err = bobTx.ToRawTxString()
-	assert.NoError(t, err)
-	assert.Equal(t, testTx, rawTx)
+	require.NoError(t, err)
+	require.Equal(t, testTx, rawTx)
 }
 
 // ExampleTx_ToRawTxString example using ToRawTxString()
@@ -537,18 +533,18 @@ func Test_GoBT_ASM(t *testing.T) {
 	t.Run("test go-bt ASM", func(t *testing.T) {
 
 		// goBobTx, err := NewFromRawTxString(parityTx)
-		// assert.NotNil(t, goBobTx)
-		// assert.Nil(t, err)
+		// require.NotNil(t, goBobTx)
+		// require.Nil(t, err)
 
 		btTx, err := transaction.NewTransactionFromHex(parityTx)
-		assert.Nil(t, err)
-		assert.NotNil(t, *btTx)
+		require.NoError(t, err)
+		require.NotNil(t, *btTx)
 
 		asmBt := btTx.Outputs[0].LockingScript.ToASM()
 
 		pushDatas := strings.Split(asmBt, " ")
-		assert.Equal(t, 10, len(pushDatas))
-		assert.Equal(t, "OP_RETURN", pushDatas[0])
+		require.Len(t, pushDatas, 10)
+		require.Equal(t, "OP_RETURN", pushDatas[0])
 	})
 
 }
@@ -564,17 +560,17 @@ func TestBob_Vs_Bob(t *testing.T) {
 
 	// make sure number of overall keys,  ins, outs, tapes, and cells are identical
 
-	assert.Equal(t, len(bmapjsTx.Out), len(goBobTx.Out))
-	// assert.Equal(t, len(bmapjsTx.Out[0].Tape), len(goBobTx.Out[0].Tape))
-	// assert.Equal(t, len(bmapjsTx.Out[0].Tape[1].Cell), len(goBobTx.Out[0].Tape[1].Cell))
-	assert.Equal(t, *bmapjsTx.Out[0].Tape[1].Cell[3].H, *goBobTx.Out[0].Tape[1].Cell[3].H)
+	require.Equal(t, len(bmapjsTx.Out), len(goBobTx.Out))
+	// require.Equal(t, len(bmapjsTx.Out[0].Tape), len(goBobTx.Out[0].Tape))
+	// require.Equal(t, len(bmapjsTx.Out[0].Tape[1].Cell), len(goBobTx.Out[0].Tape[1].Cell))
+	require.Equal(t, *bmapjsTx.Out[0].Tape[1].Cell[3].H, *goBobTx.Out[0].Tape[1].Cell[3].H)
 
 	// fmt.Println(fmt.Sprintf("expected %+v", bmapjsTx.Out[0].Tape[1].Cell))
 	// fmt.Println(fmt.Sprintf("actual %+v", goBobTx.Out[0].Tape[1].Cell))
 
-	// assert.Equal(t, len(bmapjsTx.Out[1].Tape), len(goBobTx.Out[1].Tape))
-	// assert.Equal(t, len(bmapjsTx.Out[1].Tape[0].Cell), len(goBobTx.Out[1].Tape[0].Cell))
-	assert.Equal(t, bmapjsTx.Tx.Tx.H, goBobTx.Tx.Tx.H)
+	// require.Equal(t, len(bmapjsTx.Out[1].Tape), len(goBobTx.Out[1].Tape))
+	// require.Equal(t, len(bmapjsTx.Out[1].Tape[0].Cell), len(goBobTx.Out[1].Tape[0].Cell))
+	require.Equal(t, bmapjsTx.Tx.Tx.H, goBobTx.Tx.Tx.H)
 }
 
 // TestTx_ToString tests for nil case in ToString()
@@ -582,20 +578,20 @@ func TestTx_ToString(t *testing.T) {
 
 	bobTx := new(Tx)
 	err := bobTx.FromRawTxString(rawBobTx)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// to string
 	var txString string
 	txString, err = bobTx.ToString()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// make another bob tx from string
 	var otherBob *Tx
 	otherBob, err = NewFromString(txString)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// check txid match
-	assert.Equal(t, bobTx.Tx.Tx.H, otherBob.Tx.Tx.H)
+	require.Equal(t, bobTx.Tx.Tx.H, otherBob.Tx.Tx.H)
 }
 
 // TestTx_ToString2 example using ToString()
@@ -603,12 +599,12 @@ func TestTx_ToString2(t *testing.T) {
 	// import a tx from hex
 	// TODO: - should this even work from a Bob string like this?
 	goBobTx, err := NewFromRawTxString(parityTx)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	if _, err = goBobTx.ToString(); err != nil {
 		fmt.Printf("error occurred: %s", err.Error())
 	}
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 }
 
@@ -616,33 +612,33 @@ func TestTx_ToString2(t *testing.T) {
 func TestTx_Boost(t *testing.T) {
 	// import a tx from hex
 	goBobTx, err := NewFromRawTxString(boostTx)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	if _, err = goBobTx.ToString(); err != nil {
 		fmt.Printf("error occurred: %s", err.Error())
 	}
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, 89, len(goBobTx.Out[0].Tape[0].Cell))
+	require.Len(t, goBobTx.Out[0].Tape[0].Cell, 89)
 }
 
 // Test HugeOrd
 func TestRawTxString_HugeOrd(t *testing.T) {
 	hugeOrdTx, err := transaction.NewTransactionFromHex(bigOrdTx)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// import a tx from hex
 	goBobTx, err := NewFromTx(hugeOrdTx)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	if _, err = goBobTx.ToString(); err != nil {
 		fmt.Printf("error occurred: %s", err.Error())
 	}
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, 14, len(goBobTx.Out[0].Tape[0].Cell))
-	assert.Equal(t, 2, len(goBobTx.Out[0].Tape))
-	assert.Equal(t, 1437, len(goBobTx.Out))
+	require.Len(t, goBobTx.Out[0].Tape[0].Cell, 14)
+	require.Len(t, goBobTx.Out[0].Tape, 2)
+	require.Len(t, goBobTx.Out, 1437)
 
 }
 
@@ -650,16 +646,16 @@ func TestRawTxString_HugeOrd(t *testing.T) {
 func TestTx_HugeOrd(t *testing.T) {
 	// import a tx from hex
 	goBobTx, err := NewFromRawTxString(bigOrdTx)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	if _, err = goBobTx.ToString(); err != nil {
 		fmt.Printf("error occurred: %s", err.Error())
 	}
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, 14, len(goBobTx.Out[0].Tape[0].Cell))
-	assert.Equal(t, 2, len(goBobTx.Out[0].Tape))
-	assert.Equal(t, 1437, len(goBobTx.Out))
+	require.Len(t, goBobTx.Out[0].Tape[0].Cell, 14)
+	require.Len(t, goBobTx.Out[0].Tape, 2)
+	require.Len(t, goBobTx.Out, 1437)
 
 }
 
