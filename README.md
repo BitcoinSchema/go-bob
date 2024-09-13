@@ -5,7 +5,6 @@
 [![Release](https://img.shields.io/github/release-pre/BitcoinSchema/go-bob.svg?logo=github&style=flat&v=3)](https://github.com/BitcoinSchema/go-bob/releases)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/BitcoinSchema/go-bob/run-tests.yml?branch=master&logo=github&v=3)](https://github.com/BitcoinSchema/go-bob/actions)
 [![Report](https://goreportcard.com/badge/github.com/BitcoinSchema/go-bob?style=flat&v=3)](https://goreportcard.com/report/github.com/BitcoinSchema/go-bob)
-[![codecov](https://codecov.io/gh/BitcoinSchema/go-bob/branch/master/graph/badge.svg?v=3)](https://codecov.io/gh/BitcoinSchema/go-bob)
 [![Go](https://img.shields.io/github/go-mod/go-version/BitcoinSchema/go-bob?v=3)](https://golang.org/)
 <br>
 [![Mergify Status](https://img.shields.io/endpoint.svg?url=https://api.mergify.com/v1/badges/BitcoinSchema/go-bob&style=flat&v=3)](https://mergify.io)
@@ -128,7 +127,7 @@ vet                   Run the Go vet application
 ## Examples & Tests
 
 All unit tests and [examples](examples) run via [GitHub Actions](https://github.com/BitcoinSchema/go-bob/actions) and
-uses [Go version 1.19.x](https://golang.org/doc/go1.19). View the [configuration file](.github/workflows/run-tests.yml).
+uses [Go version 1.23.x](https://golang.org/doc/go1.23). View the [configuration file](.github/workflows/run-tests.yml).
 
 Run all tests (including integration tests)
 

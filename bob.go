@@ -15,9 +15,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/bitcoin-sv/go-sdk/chainhash"
+	"github.com/bitcoin-sv/go-sdk/script"
+	"github.com/bitcoin-sv/go-sdk/transaction"
+	"github.com/bitcoin-sv/go-sdk/transaction/template/p2pkh"
 	"github.com/bitcoinschema/go-bpu"
-	"github.com/libsv/go-bt/v2"
-	"github.com/libsv/go-bt/v2/bscript"
 )
 
 // Protocol delimiter constants
@@ -64,7 +66,7 @@ func NewFromString(line string) (bobTx *Tx, err error) {
 }
 
 // NewFromTx creates a new BobTx from a libsv Transaction
-func NewFromTx(tx *bt.Tx) (bobTx *Tx, err error) {
+func NewFromTx(tx *transaction.Transaction) (bobTx *Tx, err error) {
 	bobTx = new(Tx)
 	err = bobTx.FromTx(tx)
 	if err != nil {
@@ -187,7 +189,7 @@ func (t *Tx) FromString(line string) (err error) {
 }
 
 // FromTx takes a bt.Tx
-func (t *Tx) FromTx(tx *bt.Tx) error {
+func (t *Tx) FromTx(tx *transaction.Transaction) error {
 
 	if tx == nil {
 		return fmt.Errorf("Tx must be set")
@@ -238,8 +240,8 @@ func (t *Tx) ToString() (string, error) {
 }
 
 // ToTx returns a bt.Tx
-func (t *Tx) ToTx() (*bt.Tx, error) {
-	tx := bt.NewTx()
+func (t *Tx) ToTx() (*transaction.Transaction, error) {
+	tx := transaction.NewTransaction()
 
 	tx.LockTime = t.Lock
 
@@ -249,7 +251,11 @@ func (t *Tx) ToTx() (*bt.Tx, error) {
 			return nil, fmt.Errorf("failed to process inputs. More tapes or cells than expected. %+v", in.Tape)
 		}
 
-		prevTxScript, _ := bscript.NewP2PKHFromAddress(*in.E.A)
+		add, err := script.NewAddressFromString(*in.E.A)
+		if err != nil {
+			return nil, err
+		}
+		prevTxScript, _ := p2pkh.Lock(add)
 
 		var scriptAsm []string
 		// TODO: This will break if there is ever a bpu splitter present in inputs
@@ -258,7 +264,7 @@ func (t *Tx) ToTx() (*bt.Tx, error) {
 			scriptAsm = append(scriptAsm, cellData)
 		}
 
-		builtUnlockScript, err := bscript.NewFromASM(strings.Join(scriptAsm, " "))
+		builtUnlockScript, err := script.NewFromASM(strings.Join(scriptAsm, " "))
 		if err != nil {
 			return nil, fmt.Errorf("failed to get script from asm: %v error: %w", scriptAsm, err)
 		}
@@ -268,15 +274,17 @@ func (t *Tx) ToTx() (*bt.Tx, error) {
 		}
 
 		// add inputs
-		i := &bt.Input{
-			PreviousTxOutIndex: in.E.I, // TODO: This might be getting set incorrectly?
-			PreviousTxSatoshis: v,
-			PreviousTxScript:   prevTxScript,
-			UnlockingScript:    builtUnlockScript,
-			SequenceNumber:     in.Seq,
+		i := &transaction.TransactionInput{
+			SourceTxOutIndex: in.E.I, // TODO: This might be getting set incorrectly?
+			UnlockingScript:  builtUnlockScript,
+			SequenceNumber:   in.Seq,
 		}
+		i.SourceTXID, _ = chainhash.NewHashFromHex(*in.E.H)
+		i.SetSourceTxOutput(&transaction.TransactionOutput{
+			Satoshis:      v,
+			LockingScript: prevTxScript,
+		})
 
-		_ = i.PreviousTxIDAddStr(*in.E.H)
 		tx.Inputs = append(tx.Inputs, i) // AddInput(i)
 	}
 
@@ -299,8 +307,8 @@ func (t *Tx) ToTx() (*bt.Tx, error) {
 			}
 		}
 
-		lockingScript, _ := bscript.NewFromASM(strings.Join(lockScriptAsm, " "))
-		o := &bt.Output{
+		lockingScript, _ := script.NewFromASM(strings.Join(lockScriptAsm, " "))
+		o := &transaction.TransactionOutput{
 			Satoshis:      *out.E.V,
 			LockingScript: lockingScript,
 		}
