@@ -5,7 +5,7 @@ go 1.23.1
 require (
 	github.com/bitcoin-sv/go-sdk v1.1.14
 	github.com/bitcoinschema/go-bpu v0.2.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
