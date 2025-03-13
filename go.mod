@@ -4,7 +4,7 @@ go 1.23.1
 toolchain go1.24.1
 
 require (
-	github.com/bitcoin-sv/go-sdk v1.1.20
+	github.com/bitcoin-sv/go-sdk v1.1.21
 	github.com/bitcoinschema/go-bpu v0.2.1
 	github.com/stretchr/testify v1.10.0
 )
