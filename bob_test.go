@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
+	test "github.com/bitcoinschema/go-bob/testing"
 	"github.com/bsv-blockchain/go-sdk/script"
 	"github.com/bsv-blockchain/go-sdk/transaction"
-	test "github.com/bitcoinschema/go-bob/testing"
 	"github.com/stretchr/testify/require"
 )
 
