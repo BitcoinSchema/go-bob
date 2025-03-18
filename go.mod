@@ -1,11 +1,10 @@
 module github.com/bitcoinschema/go-bob
 
-go 1.23.1
-toolchain go1.24.1
+go 1.24.1
 
 require (
-	github.com/bitcoin-sv/go-sdk v1.1.21
-	github.com/bitcoinschema/go-bpu v0.2.1
+	github.com/bitcoinschema/go-bpu v0.2.2
+	github.com/bsv-blockchain/go-sdk v1.1.22
 	github.com/stretchr/testify v1.10.0
 )
 
