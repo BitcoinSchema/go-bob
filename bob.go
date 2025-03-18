@@ -15,10 +15,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bitcoin-sv/go-sdk/chainhash"
-	"github.com/bitcoin-sv/go-sdk/script"
-	"github.com/bitcoin-sv/go-sdk/transaction"
-	"github.com/bitcoin-sv/go-sdk/transaction/template/p2pkh"
+	"github.com/bsv-blockchain/go-sdk/chainhash"
+	"github.com/bsv-blockchain/go-sdk/script"
+	"github.com/bsv-blockchain/go-sdk/transaction"
+	"github.com/bsv-blockchain/go-sdk/transaction/template/p2pkh"
 	"github.com/bitcoinschema/go-bpu"
 )
 
