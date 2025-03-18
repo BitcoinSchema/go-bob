@@ -307,8 +307,8 @@ func BenchmarkNewFromRawTxString(b *testing.B) {
 func testExampleTx() *transaction.Transaction {
 	tx := transaction.NewTransaction()
 	s := script.NewFromBytes([]byte{})
-	s.AppendOpcodes(script.OpFALSE, script.OpRETURN)
-	s.AppendPushDataArray([][]byte{[]byte("prefix1"), []byte("example data"), []byte{0x13, 0x37}, []byte{0x7c}, []byte("prefix2"), []byte("example data 2")})
+	_ = s.AppendOpcodes(script.OpFALSE, script.OpRETURN)
+	_ = s.AppendPushDataArray([][]byte{[]byte("prefix1"), []byte("example data"), []byte{0x13, 0x37}, []byte{0x7c}, []byte("prefix2"), []byte("example data 2")})
 
 	tx.AddOutput(&transaction.TransactionOutput{
 		LockingScript: s,
