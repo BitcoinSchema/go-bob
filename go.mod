@@ -4,7 +4,7 @@ go 1.24.1
 
 require (
 	github.com/bitcoinschema/go-bpu v0.2.2
-	github.com/bsv-blockchain/go-sdk v1.1.22
+	github.com/bsv-blockchain/go-sdk v1.1.23
 	github.com/stretchr/testify v1.10.0
 )
 
